@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Utensils, Eye, EyeOff, ChevronRight } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
 
 const FloatingPlate = ({ delay }) => (
   <motion.div
@@ -32,15 +31,30 @@ export default function PreperlyLogin() {
   const [mobileNumber, setMobileNumber] = useState('');
   const [fullName, setFullName] = useState('');
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Handle login logic here
+    const userData = { email, password, username, mobileNumber, fullName};
+    try{
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        // Handle successful login
+        console.log('Login successful:', data);
+      } else {
+        // Handle login error
+        console.error('Login failed:', data.error);
+      }
+    }catch(error){
+      console.error('An Error occured:', error);
+    }
   };
-
-  const handleLoginClick = () => {
-    navigate('/login');
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4 overflow-hidden relative">

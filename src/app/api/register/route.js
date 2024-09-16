@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from 'bcrypt';
 import User from "@/models/userModel";
-
+/**
+ * Handles POST requests to register a new user.
+ * 
+ * @param {Request} request - The incoming request object.
+ * @returns {Promise<Response>} - The response object.
+ */
 export async function POST(request) {
     try{
         const {
@@ -15,7 +20,6 @@ export async function POST(request) {
 
         
         await clientPromise();
-        console.log(User);
 
         const existingUser = await User.findOne({username: username});
         if(existingUser){
