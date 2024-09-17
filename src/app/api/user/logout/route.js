@@ -1,10 +1,23 @@
-import { withSession } from "@/lib/session";
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 
-export default withSession(async function handler(req, res) {
-    if (req.method === 'POST') {
-      req.session.destroy();
-      res.status(200).json({ message: 'Logged out successfully' });
-    } else {
-      res.status(405).json({ message: 'Method not allowed' });
-    }
-  });
+export async function POST() {
+  const cookieStore = cookies()
+
+  console.log(cookieStore);
+  
+  // Clear the session cookie
+  cookieStore.delete('session')
+
+  return NextResponse.json(
+    { message: 'Logged out successfully' },
+    { status: 200 }
+  )
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { message: 'Method not allowed' },
+    { status: 405 }
+  )
+}

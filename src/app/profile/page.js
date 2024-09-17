@@ -132,54 +132,58 @@ export default function Component() {
   }
 
   const [profilePic, setProfilePic] = useState("");
+  const [datauser, setUserData] = useState(null);
 
   React.useEffect(() => {
-    setProfilePic(getProfileUrl());
+
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get('/api/user/getUser', {withCredentials: true});
+        if(response.status === 200){
+          console.log('Response: ',response);
+          setUserData(response.data);
+        }else{
+          console.error('An error occurred while fetching user data: ', error);
+        }
+      } catch (error) {
+        console.error('An error occurred while fetching user data: ', error);
+      }
+    };
+
+    fetchUserData();
+
   }, []);
 
   const router = useRouter();
 
   const handleLogout = async () => {
     try{
-      const response = await axios.post('/api/user/logout', {}, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
+      const response = await axios.post('/api/user/logout', {}, {withCredentials: true});
 
-      if(response.ok){
+      if(response.status === 200){
         localStorage.removeItem('profilePic');
         localStorage.removeItem('profilePicTimestamp');
-        router.push('/');
-      }else{
-        console.error('Failed to logout');
+        router.push('/login');
       }
-
     }catch(error){
       console.error('An error occurred while loggin out: ', error);
     }
   }
 
-  const userData = {
-    name: "JANAKI",
-    userName: "janaki",
-    phone: "+977 9840103828",
-    email: "bibhushansaakha@gmail.com",
-    profilePic: profilePic
-  };
+  console.log(datauser);
 
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
-      <Header profilePic={userData.profilePic} />
+      <Header profilePic={profilePic} />
       <main className="max-w-lg mx-auto px-4">
-        <ProfilePicture src={userData.profilePic} />
+        <ProfilePicture src={profilePic} />
         <InfoSection title="Personal Info">
-          <InfoItem icon={User} label="Your name" value={userData.name} />
-          <InfoItem icon={User} label="Username" value={userData.userName} />
+          <InfoItem icon={User} label="Your name" value={'Debmalya Sen'} />
+          <InfoItem icon={User} label="Username" value={'batmanGreat'} />
         </InfoSection>
         <InfoSection title="Contact Info">
-          <InfoItem icon={Phone} label="Phone number" value={userData.phone} />
-          <InfoItem icon={Mail} label="Email" value={userData.email} />
+          <InfoItem icon={Phone} label="Phone number" value={7989067758} />
+          <InfoItem icon={Mail} label="Email" value={'batmanGotham@wayne.com'} />
         </InfoSection>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -187,7 +191,7 @@ export default function Component() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <EditButton />
-          <LogoutButton />
+          <LogoutButton onClick={handleLogout} />
         </motion.div>
       </main>
     </div>

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Utensils, Eye, EyeOff, ChevronRight } from "lucide-react";
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const FloatingPlate = ({ delay }) => (
   <motion.div
@@ -27,10 +29,24 @@ export default function PreperlyLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
+    setLoading(true);
+    
+    try {
+      const response = await axios.post('/api/user/login', { email, password}, {withCredentials: true});
+      console.log(response.data);
+      router.push('/home');
+    } catch (error) {
+      console.error(error);
+      // setError('Login failed. Please check your credentials and try again.');
+    }finally{
+      setLoading(false);
+    }
   };
 
   return (

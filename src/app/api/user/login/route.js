@@ -17,7 +17,7 @@ export const POST = withSession(async function handler(request) {
             const session = await getIronSession(cookies(), sessionOptions);
             session.user = { id: user._id, username: user.username };
             await session.save();
-
+            console.log(session);
             return NextResponse.json({ message: "Logged in successfully!" }, { status: 200 });
         } else {
             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
