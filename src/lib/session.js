@@ -1,0 +1,24 @@
+// @/lib/session.js
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
+
+export const sessionOptions = {
+  cookieName: "preperly_session",
+  password: process.env.SESSION_SECRET,
+  cookieOptions: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+  },
+};
+
+export function withSession(handler) {
+  return async function newHandler(request) {
+    const session = await getIronSession(cookies(), sessionOptions);
+
+    // Attach the session to the request object
+    request.session = session;
+
+    // Call the original handler
+    return handler(request);
+  };
+}

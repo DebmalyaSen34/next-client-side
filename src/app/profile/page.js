@@ -1,8 +1,11 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, MapPin, Phone, Mail, Edit2, ChevronRight, ArrowLeft } from 'lucide-react';
+import { User, MapPin, Phone, Mail, Edit2, ChevronRight, ArrowLeft, LogOut } from 'lucide-react';
 import Image from 'next/image';
+import profileUrls from './profilePictures';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 const Header = ({ profilePic }) => (
   <header className="bg-white shadow-md p-4 flex items-center justify-between">
@@ -31,7 +34,6 @@ const Header = ({ profilePic }) => (
       height={50}
       className="object-cover"
     />
-      {/* <img src={profilePic} alt="User Profile" className="w-full h-full object-cover" /> */}
     </motion.div>
   </header>
 );
@@ -41,7 +43,6 @@ const ProfilePicture = ({ src }) => (
     className="relative w-32 h-32 mx-auto mt-6 mb-4"
     whileHover={{ scale: 1.05 }}
   >
-    {/* <img src={src} alt="Profile" className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg" /> */}
     <Image
       src={src}
       alt="Profile"
@@ -65,7 +66,7 @@ const InfoSection = ({ title, children }) => (
     transition={{ duration: 0.5 }}
     className="bg-white rounded-lg shadow-md p-6 mb-4"
   >
-    <h2 className="text-lg font-semibold mb-4">{title}</h2>
+    <h2 className="text-lg font-semibold mb-4 text-black">{title}</h2>
     {children}
   </motion.section>
 );
@@ -75,25 +76,9 @@ const InfoItem = ({ icon: Icon, label, value }) => (
     <Icon className="w-5 h-5 text-orange-500 mr-3" />
     <div>
       <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-medium">{value}</p>
+      <p className="font-medium text-orange-500">{value}</p>
     </div>
   </div>
-);
-
-const ToggleSwitch = ({ isOn, onToggle }) => (
-  <motion.button
-    className={`w-12 h-6 flex items-center rounded-full p-1 ${
-      isOn ? 'bg-green-500' : 'bg-gray-300'
-    }`}
-    onClick={onToggle}
-  >
-    <motion.div
-      className="bg-white w-4 h-4 rounded-full shadow-md"
-      layout
-      transition={{ type: "spring", stiffness: 700, damping: 30 }}
-      animate={{ x: isOn ? 24 : 0 }}
-    />
-  </motion.button>
 );
 
 const EditButton = () => (
@@ -106,16 +91,81 @@ const EditButton = () => (
   </motion.button>
 );
 
+const LogoutButton = ({onClick}) => (
+  <motion.button
+    onClick={onClick}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    className="w-full bg-white border-2 border-red-500 text-red-500 py-3 rounded-lg font-semibold text-lg shadow-md flex items-center justify-center mt-4"
+  >
+    <LogOut className="w-5 h-5 mr-2" />
+    Log Out
+  </motion.button>
+);
+
 export default function Component() {
-  const [isMember, setIsMember] = useState(true);
+  
+  //todo: Make feature that user can upload desired profile pic
+  //todo: Ship feature in 1 week
+  
+  const getRandomProfileUrl = () => {
+    const randomProfileUrl = Math.floor(Math.random() * profileUrls.length);
+    return profileUrls[randomProfileUrl];
+  }
+
+  const getProfileUrl = () => {
+    const storedProfilePic = localStorage.getItem('profilePic');
+    const storedTimestamp = localStorage.getItem('profilePicTimestamp');
+    const now = new Date().getTime();
+
+    if(storedProfilePic && storedTimestamp){
+      const oneDay = 24 * 60 * 60 * 1000;
+      if(now - storedTimestamp < oneDay){
+        return storedProfilePic;
+      }
+    }
+
+    const newProfilePic = getRandomProfileUrl();
+    localStorage.setItem('profilePic', newProfilePic);
+    localStorage.setItem('profilePicTimestamp', now);
+    return newProfilePic;
+  }
+
+  const [profilePic, setProfilePic] = useState("");
+
+  React.useEffect(() => {
+    setProfilePic(getProfileUrl());
+  }, []);
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try{
+      const response = await axios.post('/api/user/logout', {}, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+
+      if(response.ok){
+        localStorage.removeItem('profilePic');
+        localStorage.removeItem('profilePicTimestamp');
+        router.push('/');
+      }else{
+        console.error('Failed to logout');
+      }
+
+    }catch(error){
+      console.error('An error occurred while loggin out: ', error);
+    }
+  }
 
   const userData = {
     name: "JANAKI",
-    occupation: "Student",
-    address: "NITW, Hanamakonda",
+    userName: "janaki",
     phone: "+977 9840103828",
     email: "bibhushansaakha@gmail.com",
-    profilePic: "https://www.svgrepo.com/show/106359/avatar.svg"
+    profilePic: profilePic
   };
 
   return (
@@ -125,12 +175,7 @@ export default function Component() {
         <ProfilePicture src={userData.profilePic} />
         <InfoSection title="Personal Info">
           <InfoItem icon={User} label="Your name" value={userData.name} />
-          <InfoItem icon={User} label="Occupation" value={userData.occupation} />
-          <InfoItem icon={MapPin} label="Address" value={userData.address} />
-          <div className="flex items-center justify-between mt-4">
-            <span className="font-medium">Member</span>
-            <ToggleSwitch isOn={isMember} onToggle={() => setIsMember(!isMember)} />
-          </div>
+          <InfoItem icon={User} label="Username" value={userData.userName} />
         </InfoSection>
         <InfoSection title="Contact Info">
           <InfoItem icon={Phone} label="Phone number" value={userData.phone} />
@@ -142,6 +187,7 @@ export default function Component() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <EditButton />
+          <LogoutButton />
         </motion.div>
       </main>
     </div>
