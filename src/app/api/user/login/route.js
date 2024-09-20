@@ -5,25 +5,50 @@ import User from "@/models/userModel";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
+import { generateToken } from "@/lib/jwt";
 
-export const POST = withSession(async function handler(request) {
+// export const POST = withSession(async function handler(request) {
+//     try {
+//         const { email, password } = await request.json();
+//         await connectToDatabase();
+
+//         const user = await User.findOne({ email: email });
+
+//         if (user && await bcrypt.compare(password, user.password)) {
+//             // const session = await getIronSession(cookies(), sessionOptions);
+//             // session.user = { id: user._id, username: user.username };
+//             // await session.save();
+//             // console.log(session);
+//             const token = generateToken({id: user._id, username: user.username});
+//             const response = NextResponse.json({ message: 'Logged in successfully!' });
+//             response.cookies.set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+//             return response;
+//         } else {
+//             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+//         }
+//     } catch (error) {
+//         console.error("Login error:", error);
+//         return NextResponse.json({ message: 'An error occurred during login' }, { status: 500 });
+//     }
+// });
+
+export async function POST(request) {
     try {
         const { email, password } = await request.json();
         await connectToDatabase();
 
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ email });
 
         if (user && await bcrypt.compare(password, user.password)) {
-            const session = await getIronSession(cookies(), sessionOptions);
-            session.user = { id: user._id, username: user.username };
-            await session.save();
-            console.log(session);
-            return NextResponse.json({ message: "Logged in successfully!" }, { status: 200 });
+            const token = generateToken({ id: user._id, username: user.username });
+            const response = NextResponse.json({ message: 'Logged in successfully!' });
+            response.cookies.set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+            return response;
         } else {
             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
         }
     } catch (error) {
-        console.error("Login error:", error);
+        console.error('Login error:', error);
         return NextResponse.json({ message: 'An error occurred during login' }, { status: 500 });
     }
-});
+}

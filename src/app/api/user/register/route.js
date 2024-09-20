@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from 'bcrypt';
 import User from "@/models/userModel";
+import { generateToken } from "@/lib/jwt";
 /**
  * Handles POST requests to register a new user.
  * 
@@ -40,7 +41,17 @@ export async function POST(request) {
 
         await newUser.save();
 
-        return NextResponse.json({ message: "User created successfully!" });
+        const token = generateToken({ id: newUser._id, username: newUser.username });
+
+        // Set the token in the cookies
+        const response = NextResponse.json({ message: "User created successfully!" });
+        response.cookies.set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+
+        // Redirect to /home
+        response.headers.set('Location', '/home');
+        response.status = 302;
+
+        return response;
     }catch(error){
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

@@ -7,7 +7,7 @@ export async function POST() {
   console.log(cookieStore);
   
   // Clear the session cookie
-  cookieStore.delete('session')
+  cookieStore.delete('token')
 
   return NextResponse.json(
     { message: 'Logged out successfully' },

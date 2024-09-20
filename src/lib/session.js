@@ -17,12 +17,14 @@ export function withSession(handler) {
 
     // Attach the session to the request object
     request.session = session;
+    console.log('session', session);
 
     const response = await handler(request);
 
     await session.save();
 
     // Call the original handler
+    console.log('response: ', response);
     return response;
   };
 }

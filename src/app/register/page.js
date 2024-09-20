@@ -36,7 +36,7 @@ export default function PreperlyLogin() {
     // Handle login logic here
     const userData = { email, password, username, mobileNumber, fullName};
     try{
-      const response = await fetch('/api/register', {
+      const response = await fetch('/api/user/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,10 +46,10 @@ export default function PreperlyLogin() {
       const data = await response.json();
       if (response.ok) {
         // Handle successful login
-        console.log('Login successful:', data);
+        console.log('Registeration successful:', data);
       } else {
         // Handle login error
-        console.error('Login failed:', data.error);
+        console.error('Registration failed:', data.error);
       }
     }catch(error){
       console.error('An Error occured:', error);

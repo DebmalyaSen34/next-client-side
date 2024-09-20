@@ -6,6 +6,7 @@ import Image from 'next/image';
 import profileUrls from './profilePictures';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import CreativeProfileLoading from './loading';
 
 const Header = ({ profilePic }) => (
   <header className="bg-white shadow-md p-4 flex items-center justify-between">
@@ -154,6 +155,8 @@ export default function Component() {
 
   }, []);
 
+  console.log(datauser);
+
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -170,7 +173,9 @@ export default function Component() {
     }
   }
 
-  console.log(datauser);
+  if (!datauser) {
+    return <CreativeProfileLoading />;
+  }
 
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
@@ -178,12 +183,12 @@ export default function Component() {
       <main className="max-w-lg mx-auto px-4">
         <ProfilePicture src={profilePic} />
         <InfoSection title="Personal Info">
-          <InfoItem icon={User} label="Your name" value={'Debmalya Sen'} />
-          <InfoItem icon={User} label="Username" value={'batmanGreat'} />
+          <InfoItem icon={User} label="Your name" value={datauser.fullName} />
+          <InfoItem icon={User} label="Username" value={datauser.username} />
         </InfoSection>
         <InfoSection title="Contact Info">
-          <InfoItem icon={Phone} label="Phone number" value={7989067758} />
-          <InfoItem icon={Mail} label="Email" value={'batmanGotham@wayne.com'} />
+          <InfoItem icon={Phone} label="Phone number" value={datauser.mobileNumber} />
+          <InfoItem icon={Mail} label="Email" value={datauser.email} />
         </InfoSection>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
