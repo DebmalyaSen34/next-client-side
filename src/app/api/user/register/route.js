@@ -45,7 +45,7 @@ export async function POST(request) {
 
         // Set the token in the cookies
         const response = NextResponse.json({ message: "User created successfully!" });
-        response.cookies.set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+        response.cookies.set('token', token, { httpOnly: false, secure: process.env.NODE_ENV === 'production' });
 
         // Redirect to /home
         response.headers.set('Location', '/home');
