@@ -39,19 +39,11 @@ export async function POST(request) {
             mobileNumber: mobileNumber
         });
 
+        console.log('New User: ', newUser);
+
         await newUser.save();
 
-        const token = generateToken({ id: newUser._id, username: newUser.username });
-
-        // Set the token in the cookies
-        const response = NextResponse.json({ message: "User created successfully!" });
-        response.cookies.set('token', token, { httpOnly: false, secure: process.env.NODE_ENV === 'production' });
-
-        // Redirect to /home
-        response.headers.set('Location', '/home');
-        response.status = 302;
-
-        return response;
+        return NextResponse.json({ message: "User saved successfully!"});
     }catch(error){
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
