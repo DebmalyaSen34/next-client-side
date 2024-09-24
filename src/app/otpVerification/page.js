@@ -91,7 +91,7 @@ export default function OTPVerificationPage() {
       if (verificationReponse.ok){
         // Redirect to dashboard or success page
         console.log('Verification successful');
-        router.push('/');
+        router.push('/login');
       }else{
         console.error('Verification failed');
       }

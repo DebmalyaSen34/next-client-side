@@ -6,6 +6,22 @@ import Link from 'next/link';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home');
+  const [restaurants, setRestaurant] = useState([]);
+
+  React.useEffect(() => {
+    async function fetchRestaurants() {
+      try {
+        const response = await fetch('/api/vendor/restaurant');
+        if (response.ok) {
+          const data = await response.json();
+          setRestaurant(data);
+        }
+      } catch (err) {
+        console.error('Failure fetching restaurants from database!', err);
+      }
+    }
+    fetchRestaurants();
+  }, []);
 
   return (
     <div className="max-w-md mx-auto bg-gray-100 h-screen overflow-hidden flex flex-col">
@@ -81,26 +97,22 @@ export default function HomePage() {
         <section className="p-4">
           <h3 className="text-lg font-semibold mb-2 text-orange-800">Restaurants</h3>
           <motion.div layout className="space-y-4">
-            {[
-              { name: "Yummy's", location: "NITW, Warangal, Telangana", rating: 4.5 },
-              { name: "Spice Haven", location: "Downtown, Cityville", rating: 4.2 },
-              { name: "Green Leaf Cafe", location: "Uptown, Metropolis", rating: 4.7 },
-            ].map((restaurant, index) => (
+            {restaurants.map((restaurant) => (
               <motion.div
-                key={index}
+                key={restaurant._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: 2 * 0.1 }}
                 className="bg-white rounded-lg shadow-md p-4 flex items-center space-x-4"
               >
                 <img
                   src={'https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg'}
-                  alt={restaurant.name}
+                  alt={restaurant.restaurantName}
                   className="w-20 h-20 rounded-lg object-cover"
                 />
                 <div>
-                  <h4 className="font-semibold text-orange-800">{restaurant.name}</h4>
-                  <p className="text-sm text-gray-600">{restaurant.location}</p>
+                  <h4 className="font-semibold text-orange-800">{restaurant.restaurantName}</h4>
+                  <p className="text-sm text-gray-600">{restaurant.address}</p>
                   <div className="flex items-center mt-1">
                     <span className="text-yellow-500 mr-1">★</span>
                     <span className="text-orange-600">{restaurant.rating}</span>
