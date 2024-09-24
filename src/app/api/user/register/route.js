@@ -27,8 +27,6 @@ export async function POST(request) {
             return NextResponse.json({ error: "user already exists!"});
         }
 
-        console.log("Here it is: ", existingUser);
-
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({

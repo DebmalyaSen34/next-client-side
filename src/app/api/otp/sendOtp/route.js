@@ -49,8 +49,12 @@ export async function POST(request) {
             body
         });
 
+        console.log("Raw response: ", response);
+
         // Parse the response from the Fast2SMS API
         const data = await response.json();
+
+        console.log("Parsed response data: ", data);
 
         // Check if the OTP was sent successfully
         if (response.ok) {
