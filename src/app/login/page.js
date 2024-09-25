@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Utensils, Eye, EyeOff, ChevronRight } from "lucide-react";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import LoadingScreen from '../components/LoadingScreen';
 
 const FloatingPlate = ({ delay }) => (
   <motion.div
@@ -30,7 +31,6 @@ export default function PreperlyLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -43,11 +43,14 @@ export default function PreperlyLogin() {
       router.push('/home');
     } catch (error) {
       console.error(error);
-      // setError('Login failed. Please check your credentials and try again.');
     }finally{
       setLoading(false);
     }
   };
+
+  if(loading){
+    return <LoadingScreen message = "Preparing login..." />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4 overflow-hidden relative">
