@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Utensils, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 const FloatingPlate = ({ delay }) => (
   <motion.div
@@ -30,6 +31,7 @@ export default function PreperlyLogin() {
   const [username, setUsername] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [fullName, setFullName] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,8 +49,24 @@ export default function PreperlyLogin() {
       if (response.ok) {
         // Handle successful login
         console.log('Registeration successful:', data);
+
+        const otpResponse = await fetch('/api/otp/sendOtp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ mobileNumber }),
+        });
+        const otpData = await otpResponse.json();
+        if(otpResponse.ok){
+          // redirecting to otpVerification page
+          router.push(`/otpVerification?mobileNumber=${encodeURIComponent(mobileNumber)}`);
+          console.log('OTP sent successfully: ', otpData);
+        }else{
+          console.error('Failed to send OTP:', otpData.error);
+        }
       } else {
-        // Handle login error
+        // Handle registration error
         console.error('Registration failed:', data.error);
       }
     }catch(error){
