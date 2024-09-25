@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 export const sessionOptions = {
   cookieName: "preperly_session",
-  password: process.env.SESSION_SECRET,
+  password: process.env.JWT_SECRET,
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
