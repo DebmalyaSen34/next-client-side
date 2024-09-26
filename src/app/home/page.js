@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, User, Home, Search, ShoppingCart, ChevronDown, Heart } from 'lucide-react';
 import Link from 'next/link';
+import Layout from '../components/layout';
 
 //TODO: Add redirect link to profile, search and other
 
@@ -26,23 +27,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="max-w-md mx-auto bg-gray-100 h-screen overflow-hidden flex flex-col">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-orange-600 to-red-500 p-4 flex items-center justify-between shadow-md">
-        <Menu className="w-6 h-6 text-white" />
-        <div className="flex items-center">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-orange-600 font-bold text-xl mr-2">
-            P
-          </div>
-          <h1 className="text-2xl font-bold text-white">PREPERLY</h1>
-        </div>
-        <Link href="/profile">
-        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-          <User className="w-5 h-5 text-orange-600" />
-        </div>
-        </Link>
-      </header>
-
+    <Layout>
       {/* Main Content */}
       <main className="flex-grow overflow-y-auto">
         {/* Featured Restaurant */}
@@ -127,30 +112,6 @@ export default function HomePage() {
           </motion.div>
         </section>
       </main>
-
-      {/* Navigation Bar */}
-      <nav className="bg-white border-t border-gray-200 py-2">
-        <ul className="flex justify-around">
-          <li>
-            <Link href="/" className="flex flex-col items-center text-orange-600">
-              <Home className="w-6 h-6" />
-              <span className="text-xs mt-1">Home</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/restaurant" className="flex flex-col items-center text-gray-500">
-              <Search className="w-6 h-6" />
-              <span className="text-xs mt-1">Search</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/cart" className="flex flex-col items-center text-gray-500">
-              <ShoppingCart className="w-6 h-6" />
-              <span className="text-xs mt-1">Cart</span>
-            </Link>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    </Layout>
   );
 }

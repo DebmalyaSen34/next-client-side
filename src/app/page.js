@@ -49,7 +49,7 @@ export default function Component() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
+    <div className="flex flex-col min-h-screen bg-red-100">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-red-600 text-white">
         <Link className="flex items-center justify-center" href="#">
           <Utensils className="h-6 w-6 mr-2" />

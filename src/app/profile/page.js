@@ -8,39 +8,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import CreativeProfileLoading from './loading';
 import Link from 'next/link';
-
-const Header = ({ profilePic }) => (
-  <header className="bg-white shadow-md p-4 flex items-center justify-between">
-    <div className="flex items-center">
-      <Link href='/home'>
-      <ArrowLeft className="w-6 h-6 text-gray-600 mr-4" />
-      </Link>
-      <motion.div 
-        whileHover={{ rotate: 360 }}
-        transition={{ duration: 0.5 }}
-        className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-2"
-      >
-        <span className="text-white text-xl font-bold">P</span>
-      </motion.div>
-      <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
-        PREPERLY
-      </h1>
-    </div>
-    <motion.div 
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500"
-    >
-        <Image
-      src={profilePic}
-      alt="User Profile"
-      width={50}
-      height={50}
-      className="object-cover"
-    />
-    </motion.div>
-  </header>
-);
+import Layout from '../components/layout';
 
 const ProfilePicture = ({ src }) => (
   <motion.div 
@@ -54,12 +22,6 @@ const ProfilePicture = ({ src }) => (
       height={128}
       className="rounded-full object-cover border-4 border-white shadow-lg"
     />
-    <motion.button
-      whileTap={{ scale: 0.9 }}
-      className="absolute bottom-0 right-0 bg-orange-500 text-white p-2 rounded-full shadow-md"
-    >
-      <Edit2 className="w-4 h-4" />
-    </motion.button>
   </motion.div>
 );
 
@@ -77,10 +39,10 @@ const InfoSection = ({ title, children }) => (
 
 const InfoItem = ({ icon: Icon, label, value }) => (
   <div className="flex items-center mb-3 last:mb-0">
-    <Icon className="w-5 h-5 text-orange-500 mr-3" />
+    <Icon className="w-5 h-5 text-red-500 mr-3" />
     <div>
       <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-medium text-orange-500">{value}</p>
+      <p className="font-medium text-red-500">{value}</p>
     </div>
   </div>
 );
@@ -89,7 +51,7 @@ const EditButton = () => (
   <motion.button
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
-    className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold text-lg shadow-md"
+    className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold text-lg shadow-md"
   >
     Edit Profile
   </motion.button>
@@ -107,7 +69,7 @@ const LogoutButton = ({onClick}) => (
   </motion.button>
 );
 
-export default function Component() {
+export default function Component({params}) {
   
   //TODO: Make feature that user can upload desired profile pic
   //TODO: Ship feature in 1 week
@@ -190,7 +152,7 @@ export default function Component() {
 
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
-      <Header profilePic={profilePic} />
+      <Layout>
       <main className="max-w-lg mx-auto px-4">
         <ProfilePicture src={profilePic} />
         <InfoSection title="Personal Info">
@@ -210,6 +172,7 @@ export default function Component() {
           <LogoutButton onClick={handleLogout} />
         </motion.div>
       </main>
+      </Layout>
     </div>
   );
 }

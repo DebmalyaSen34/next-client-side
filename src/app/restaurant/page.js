@@ -2,39 +2,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Star, Clock, ChevronDown, Filter, X } from 'lucide-react';
-
-const Header = () => (
-  <header className="bg-white shadow-md p-4 sticky top-0 z-10">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <motion.div 
-          whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.5 }}
-          className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-2"
-        >
-          <span className="text-white text-xl font-bold">P</span>
-        </motion.div>
-        <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
-          PREPERLY
-        </h1>
-      </div>
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        className="bg-gray-100 p-2 rounded-full"
-      >
-        <Filter className="w-6 h-6 text-gray-600" />
-      </motion.button>
-    </div>
-    <div className="mt-4 relative">
-      <input
-        type="text"
-        placeholder="Search restaurants..."
-        className="w-full p-3 pl-10 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-      />
-      <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-    </div>
-  </header>
-);
+import Layout from '../components/layout';
 
 const RestaurantCard = ({ restaurant }) => {
   return (
@@ -79,11 +47,10 @@ const CuisineFilter = ({ cuisines, activeCuisine, setActiveCuisine }) => {
         <motion.button
           key={cuisine}
           whileTap={{ scale: 0.95 }}
-          className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${
-            activeCuisine === cuisine
-              ? 'bg-orange-500 text-white'
+          className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${activeCuisine === cuisine
+              ? 'bg-red-500 text-white'
               : 'bg-gray-200 text-gray-700'
-          }`}
+            }`}
           onClick={() => setActiveCuisine(cuisine)}
         >
           {cuisine}
@@ -151,20 +118,21 @@ export default function Component() {
     : restaurants.filter(restaurant => restaurant.cuisine === activeCuisine);
 
   return (
-    <div className="bg-gray-100 min-h-screen pb-20">
-      <Header />
-      <main className="p-4">
-        <CuisineFilter
-          cuisines={cuisines}
-          activeCuisine={activeCuisine}
-          setActiveCuisine={setActiveCuisine}
-        />
-        <AnimatePresence>
-          {filteredRestaurants.map((restaurant) => (
-            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-          ))}
-        </AnimatePresence>
-      </main>
-    </div>
+    <Layout>
+      <div className="bg-gray-100 min-h-screen pb-20">
+        <main className="p-4">
+          <CuisineFilter
+            cuisines={cuisines}
+            activeCuisine={activeCuisine}
+            setActiveCuisine={setActiveCuisine}
+          />
+          <AnimatePresence>
+            {filteredRestaurants.map((restaurant) => (
+              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            ))}
+          </AnimatePresence>
+        </main>
+      </div>
+    </Layout>
   );
 }
