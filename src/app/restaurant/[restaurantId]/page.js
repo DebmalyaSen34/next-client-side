@@ -18,16 +18,27 @@ const Header = ({ name, onBack }) => {
   return (
     <motion.header 
       className={`fixed top-0 left-0 right-0 z-10 transition-colors duration-300 ${
-        isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
+        isScrolled ? 'bg-gradient-to-r from-orange-500 to-red-600' : 'bg-transparent'
       }`}
-      animate={{ backgroundColor: isScrolled ? '#FFFFFF' : 'transparent' }}
+      animate={{ 
+        backgroundColor: isScrolled ? ['rgba(255, 255, 255, 0)', 'rgba(239, 68, 68, 1)'] : 'rgba(255, 255, 255, 0)',
+      }}
+      transition={{ duration: 0.3 }}
     >
       <div className="flex items-center justify-between p-4">
         <button onClick={onBack} className="p-2">
-          <ArrowLeft className={`w-6 h-6 ${isScrolled ? 'text-gray-800' : 'text-white'}`} />
+          <ArrowLeft className="w-6 h-6 text-white" />
         </button>
-        {isScrolled && <h1 className="text-lg font-semibold text-gray-800">{name}</h1>}
-        <User className={`w-6 h-6 ${isScrolled ? 'text-gray-800' : 'text-white'}`} />
+        {isScrolled && (
+          <motion.h1 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-lg font-semibold text-white"
+          >
+            {name}
+          </motion.h1>
+        )}
+        <User className="w-6 h-6 text-white" />
       </div>
     </motion.header>
   );
@@ -62,9 +73,9 @@ const RestaurantInfo = ({ name, rating, distance, cuisine }) => (
           <Star className="w-4 h-4 text-white fill-current" />
           <span className="ml-1 text-sm font-semibold text-white">{rating}</span>
         </div>
-        <span className="ml-2 text-sm text-black">({Math.floor(rating * 100)} ratings)</span>
+        <span className="ml-2 text-sm text-black font-medium">({Math.floor(rating * 100)} ratings)</span>
       </div>
-      <div className="flex items-center text-gray-200">
+      <div className="flex items-center text-black font-medium">
         <MapPin className="w-4 h-4 mr-1" />
         <span className="text-sm">{distance} km</span>
       </div>
@@ -78,19 +89,19 @@ const QuickActions = () => (
       <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-1">
         <Heart className="w-6 h-6 text-red-500" />
       </div>
-      <span className="text-xs text-gray-600">Favorite</span>
+      <span className="text-xs text-black font-medium">Favorite</span>
     </motion.button>
     <motion.button whileTap={{ scale: 0.95 }} className="flex flex-col items-center">
       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-1">
         <Share2 className="w-6 h-6 text-blue-500" />
       </div>
-      <span className="text-xs text-gray-600">Share</span>
+      <span className="text-xs text-black font-medium">Share</span>
     </motion.button>
     <motion.button whileTap={{ scale: 0.95 }} className="flex flex-col items-center">
       <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-1">
         <MapPin className="w-6 h-6 text-green-500" />
       </div>
-      <span className="text-xs text-gray-600">Directions</span>
+      <span className="text-xs text-black font-medium">Directions</span>
     </motion.button>
   </div>
 );
@@ -108,14 +119,14 @@ const Description = ({ text }) => {
 
   return (
     <div className="p-4 bg-white">
-      <h3 className="text-lg font-semibold mb-2">About {'Restaurant'}</h3>
+      <h3 className="text-lg font-semibold mb-2 text-black">About {'Restaurant'}</h3>
       <motion.div
         ref={descriptionRef}
         initial={{ height: 80 }}
         animate={{ height: expanded ? 'auto' : 80 }}
         className="overflow-hidden"
       >
-        <p className="text-gray-600 text-sm">{text}</p>
+        <p className="text-black text-sm">{text}</p>
       </motion.div>
       {showMore && (
         <button
@@ -131,12 +142,12 @@ const Description = ({ text }) => {
 
 const Facilities = ({ facilities }) => (
   <div className="p-4 bg-white mt-2">
-    <h3 className="text-lg font-semibold mb-2">Facilities</h3>
+    <h3 className="text-lg font-semibold mb-2 text-black">Facilities</h3>
     <div className="grid grid-cols-2 gap-4">
       {facilities.map((facility, index) => (
         <div key={index} className="flex items-center bg-gray-100 p-2 rounded-lg">
           <Check className="w-5 h-5 text-green-500 mr-2" />
-          <span className="text-sm text-gray-700">{facility}</span>
+          <span className="text-sm text-black">{facility}</span>
         </div>
       ))}
     </div>
@@ -156,7 +167,7 @@ const BestOffers = ({ offers }) => {
   return (
     <div className="p-4 bg-white mt-2">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Best Offers</h3>
+        <h3 className="text-lg font-semibold text-black">Best Offers</h3>
         <button className="text-red-500 text-sm font-medium flex items-center">
           See all <ChevronRight className="w-4 h-4 ml-1" />
         </button>
@@ -171,7 +182,7 @@ const BestOffers = ({ offers }) => {
             >
               <Image src={offer.image} alt={offer.name} width={160} height={32} className="w-full h-32 object-cover" />
               <div className="p-2">
-                <h4 className="font-medium text-sm mb-1">{offer.name}</h4>
+                <h4 className="font-medium text-sm mb-1 text-black">{offer.name}</h4>
                 <p className="text-red-500 text-xs font-semibold">${offer.price}</p>
               </div>
             </motion.div>
@@ -192,8 +203,8 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
     <div className="flex items-center">
       <Image src={item.image} alt={item.name} width={60} height={60} className="rounded-md mr-4" />
       <div>
-        <h4 className="font-medium">{item.name}</h4>
-        <p className="text-sm text-gray-600">${item.price.toFixed(2)}</p>
+        <h4 className="font-medium text-black">{item.name}</h4>
+        <p className="text-sm text-black">${item.price.toFixed(2)}</p>
       </div>
     </div>
     <div className="flex items-center">
@@ -207,7 +218,7 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
           >
             <Minus className="w-5 h-5" />
           </motion.button>
-          <span className="mx-2 font-semibold">{quantity}</span>
+          <span className="mx-2 font-semibold text-black">{quantity}</span>
         </>
       )}
       <motion.button
@@ -259,7 +270,7 @@ const Menu = ({ items, cart, onAdd, onRemove, totalItems, totalPrice }) => {
 
   return (
     <div className="bg-white mt-2 pb-24">
-      <h3 className="text-lg font-semibold p-4">Menu</h3>
+      <h3 className="text-lg font-semibold p-4 text-black">Menu</h3>
       {displayedItems.map((item, index) => (
         <MenuItem 
           key={index} 
@@ -385,9 +396,9 @@ export default function Component() {
             className="fixed inset-0 bg-white z-50 overflow-y-auto"
           >
             <div className="sticky top-0 bg-white shadow-md p-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Menu</h2>
+              <h2 className="text-xl font-semibold text-black">Menu</h2>
               <button onClick={() => setShowMenu(false)} className="p-2">
-                <X className="w-6 h-6" />
+                <X className="w-6 h-6 text-black" />
               </button>
             </div>
             <Menu 

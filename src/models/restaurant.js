@@ -53,5 +53,5 @@ restaurantSchema.pre("save", function (next) {
     next();
 });
 
-const Restaurant = mongoose.model('Restaurant', restaurantSchema);
+const Restaurant = mongoose.models.Restaurant || mongoose.model('Restaurant', restaurantSchema);
 export default Restaurant;
