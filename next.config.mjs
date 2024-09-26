@@ -1,8 +1,44 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['media.cnn.com', 'b.zmtcdn.com', 'www.eatthis.com', 'www.holidify.com', 'i0.wp.com', 'localhost', 'vercel-blob.com']
-    },
+        remotePatterns: [
+          {
+            protocol: 'https',
+            hostname: 'media.cnn.com',
+            pathname: '/**',
+          },
+          {
+            protocol: 'https',
+            hostname: 'b.zmtcdn.com',
+            pathname: '/**',
+          },
+          {
+            protocol: 'https',
+            hostname: 'www.eatthis.com',
+            pathname: '/**',
+          },
+          {
+            protocol: 'https',
+            hostname: 'www.holidify.com',
+            pathname: '/**',
+          },
+          {
+            protocol: 'https',
+            hostname: 'i0.wp.com',
+            pathname: '/**',
+          },
+          {
+            protocol: 'http',
+            hostname: 'localhost',
+            pathname: '/**',
+          },
+          {
+            protocol: 'https',
+            hostname: 'vercel-blob.com',
+            pathname: '/**',
+          },
+        ],
+      },
     env:{
         MONGODB_URI: process.env.MONGODB_URI
     }

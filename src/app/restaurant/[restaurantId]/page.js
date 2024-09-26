@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, User, MapPin, Star, ChevronRight, Check, Coffee, Car, Utensils, Droplet, Heart, Share2, Clock } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Star, ChevronRight, Check, Coffee, Car, Utensils, Droplet, Heart, Share2, Clock, Plus, X, Minus, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 
 const Header = ({ name, onBack }) => {
@@ -182,17 +182,131 @@ const BestOffers = ({ offers }) => {
   );
 };
 
-const PreOrderButton = () => (
+const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    className="flex items-center justify-between p-4 border-b border-gray-200"
+  >
+    <div className="flex items-center">
+      <Image src={item.image} alt={item.name} width={60} height={60} className="rounded-md mr-4" />
+      <div>
+        <h4 className="font-medium">{item.name}</h4>
+        <p className="text-sm text-gray-600">${item.price.toFixed(2)}</p>
+      </div>
+    </div>
+    <div className="flex items-center">
+      {quantity > 0 && (
+        <>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            className="bg-red-500 text-white p-2 rounded-full"
+            onClick={() => onRemove(item)}
+            aria-label={`Remove ${item.name} from order`}
+          >
+            <Minus className="w-5 h-5" />
+          </motion.button>
+          <span className="mx-2 font-semibold">{quantity}</span>
+        </>
+      )}
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        className="bg-red-500 text-white p-2 rounded-full"
+        onClick={() => onAdd(item)}
+        aria-label={`Add ${item.name} to order`}
+      >
+        <Plus className="w-5 h-5" />
+      </motion.button>
+    </div>
+  </motion.div>
+);
+
+const Menu = ({ items, cart, onAdd, onRemove, totalItems, totalPrice }) => {
+  const [displayedItems, setDisplayedItems] = useState(items.slice(0, 10));
+  const [loading, setLoading] = useState(false);
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [displayedItems, loading]);
+
+  const loadMore = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const newItems = items.slice(displayedItems.length, displayedItems.length + 10);
+      setDisplayedItems(prev => [...prev, ...newItems]);
+      setLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="bg-white mt-2 pb-24">
+      <h3 className="text-lg font-semibold p-4">Menu</h3>
+      {displayedItems.map((item, index) => (
+        <MenuItem 
+          key={index} 
+          item={item} 
+          quantity={cart[item.name] || 0}
+          onAdd={onAdd} 
+          onRemove={onRemove}
+        />
+      ))}
+      {displayedItems.length < items.length && (
+        <div ref={observerTarget} className="flex justify-center p-4">
+          <motion.div
+            animate={{ rotate: loading ? 360 : 0 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Coffee className="w-6 h-6 text-red-500" />
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ShowMenuButton = ({ onClick }) => (
   <motion.button
     whileTap={{ scale: 0.95 }}
-    className="fixed bottom-4 left-4 right-4 bg-red-500 text-white py-4 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center"
+    className="bg-red-500 text-white py-4 px-6 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center w-full mb-2"
+    onClick={onClick}
   >
-    <Clock className="w-5 h-5 mr-2" />
-    Pre-Order Now
+    <Utensils className="w-5 h-5 mr-2" />
+    Show Menu
+  </motion.button>
+);
+
+const CheckoutButton = ({ totalItems, totalPrice }) => (
+  <motion.button
+    whileTap={{ scale: 0.95 }}
+    className="bg-green-500 text-white py-4 px-6 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center w-full"
+  >
+    <ShoppingCart className="w-5 h-5 mr-2" />
+    Checkout ({totalItems}) - ${totalPrice.toFixed(2)}
   </motion.button>
 );
 
 export default function Component() {
+  const [cart, setCart] = useState({});
+  const [showMenu, setShowMenu] = useState(false);
   const restaurantData = {
     name: "Yumppy's",
     rating: 4.5,
@@ -209,8 +323,44 @@ export default function Component() {
     ]
   };
 
+  const menuItems = [
+    { name: "Truffle Risotto", image: "https://media.cnn.com/api/v1/images/stellar/prod/220926135452-08-body-chinese-foods-mapo-tofu.jpg?q=w_1110,c_fill", price: 24.99 },
+    { name: "Seafood Platter", image: "https://www.eatthis.com/wp-content/uploads/sites/4/2019/02/general-tso-chicken.jpg?quality=82&strip=1", price: 39.99 },
+    { name: "Tiramisu", image: "https://www.holidify.com/images/cmsuploads/compressed/breakfast-2408818_960_720_20200107183621.jpg", price: 9.99 },
+    { name: "Wine Pairing", image: "https://i0.wp.com/travelgenes.com/wp-content/uploads/2020/10/Uttappam.jpg", price: 29.99 },
+    // Add more menu items here...
+  ];
+
+  // Duplicate the menu items to simulate a larger menu
+  const extendedMenuItems = [...Array(5)].flatMap(() => menuItems);
+
+  const handleAddToCart = (item) => {
+    setCart(prev => ({
+      ...prev,
+      [item.name]: (prev[item.name] || 0) + 1
+    }));
+  };
+
+  const handleRemoveFromCart = (item) => {
+    setCart(prev => {
+      const newCart = { ...prev };
+      if (newCart[item.name] > 1) {
+        newCart[item.name]--;
+      } else {
+        delete newCart[item.name];
+      }
+      return newCart;
+    });
+  };
+
+  const totalItems = Object.values(cart).reduce((sum, count) => sum + count, 0);
+  const totalPrice = Object.entries(cart).reduce((sum, [itemName, count]) => {
+    const item = extendedMenuItems.find(i => i.name === itemName);
+    return sum + (item ? item.price * count : 0);
+  }, 0);
+
   return (
-    <div className="bg-gray-100 min-h-screen pb-20">
+    <div className="bg-gray-100 min-h-screen pb-28">
       <Header name={restaurantData.name} onBack={() => console.log('Go back')} />
       <main>
         <RestaurantImage src={restaurantData.image} name={restaurantData.name} />
@@ -225,7 +375,43 @@ export default function Component() {
         <Facilities facilities={restaurantData.facilities} />
         <BestOffers offers={restaurantData.offers} />
       </main>
-      <PreOrderButton />
+      <AnimatePresence>
+        {showMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 500 }}
+            className="fixed inset-0 bg-white z-50 overflow-y-auto"
+          >
+            <div className="sticky top-0 bg-white shadow-md p-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Menu</h2>
+              <button onClick={() => setShowMenu(false)} className="p-2">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <Menu 
+              items={extendedMenuItems} 
+              cart={cart}
+              onAdd={handleAddToCart} 
+              onRemove={handleRemoveFromCart}
+              totalItems={totalItems}
+              totalPrice={totalPrice}
+            />
+            {totalItems > 0 && (
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white shadow-lg">
+                <CheckoutButton totalItems={totalItems} totalPrice={totalPrice} />
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="fixed bottom-4 left-4 right-4 flex flex-col">
+        <ShowMenuButton onClick={() => setShowMenu(true)} />
+        {totalItems > 0 && !showMenu && (
+          <CheckoutButton totalItems={totalItems} totalPrice={totalPrice} />
+        )}
+      </div>
     </div>
   );
 }

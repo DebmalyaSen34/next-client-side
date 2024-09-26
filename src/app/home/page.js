@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Menu, User, Home, Search, ShoppingCart, ChevronDown, Heart } from 'lucide-react';
 import Link from 'next/link';
 
+//TODO: Add redirect link to profile, search and other
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home');
   const [restaurants, setRestaurant] = useState([]);
