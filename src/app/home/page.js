@@ -36,9 +36,11 @@ export default function HomePage() {
           </div>
           <h1 className="text-2xl font-bold text-white">PREPERLY</h1>
         </div>
+        <Link href="/profile">
         <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
           <User className="w-5 h-5 text-orange-600" />
         </div>
+        </Link>
       </header>
 
       {/* Main Content */}

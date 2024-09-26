@@ -7,11 +7,14 @@ import profileUrls from './profilePictures';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import CreativeProfileLoading from './loading';
+import Link from 'next/link';
 
 const Header = ({ profilePic }) => (
   <header className="bg-white shadow-md p-4 flex items-center justify-between">
     <div className="flex items-center">
+      <Link href='/home'>
       <ArrowLeft className="w-6 h-6 text-gray-600 mr-4" />
+      </Link>
       <motion.div 
         whileHover={{ rotate: 360 }}
         transition={{ duration: 0.5 }}
@@ -106,19 +109,25 @@ const LogoutButton = ({onClick}) => (
 
 export default function Component() {
   
-  //todo: Make feature that user can upload desired profile pic
-  //todo: Ship feature in 1 week
+  //TODO: Make feature that user can upload desired profile pic
+  //TODO: Ship feature in 1 week
   
+  // Returns a random profile picture URL
   const getRandomProfileUrl = () => {
     const randomProfileUrl = Math.floor(Math.random() * profileUrls.length);
     return profileUrls[randomProfileUrl];
   }
 
+  // Get the user's profile picture from localStorage or fetch a new one if needed
   const getProfileUrl = () => {
+    if(typeof window === 'undefined'){
+      return null; // Return null or a default value during SRR 
+    }
     const storedProfilePic = localStorage.getItem('profilePic');
     const storedTimestamp = localStorage.getItem('profilePicTimestamp');
     const now = new Date().getTime();
 
+    // Get the profile picture from localStorage if it exists and is not older than 1 day
     if(storedProfilePic && storedTimestamp){
       const oneDay = 24 * 60 * 60 * 1000;
       if(now - storedTimestamp < oneDay){
@@ -126,13 +135,15 @@ export default function Component() {
       }
     }
 
+    // Fetch a new profile picture if localStorage does not exist or is older than 1 day
     const newProfilePic = getRandomProfileUrl();
     localStorage.setItem('profilePic', newProfilePic);
     localStorage.setItem('profilePicTimestamp', now);
     return newProfilePic;
   }
 
-  const [profilePic, setProfilePic] = useState("");
+  // State to keep track of the loading state of the profile picture and user Data
+  const [profilePic, setProfilePic] = useState(getProfileUrl());
   const [datauser, setUserData] = useState(null);
 
   React.useEffect(() => {
