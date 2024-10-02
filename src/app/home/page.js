@@ -50,14 +50,14 @@ export default function HomePage() {
             <input
               type="text"
               placeholder="Search restaurants or cuisines"
-              className="w-full p-2 pl-10 pr-4 rounded-full border border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full p-2 pl-10 pr-4 rounded-full border border-orange-300 focus:outline-none focus:ring-2 focus:ring-red-800"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-800" />
           </div>
         </div>
 
         {/* Recommended Section */}
-        <section className="p-4">
+        {/* <section className="p-4">
           <h3 className="text-lg font-semibold mb-2 text-orange-800">Recommended</h3>
           <div className="flex space-x-4 overflow-x-auto pb-2">
             {[1, 2, 3].map((item) => (
@@ -81,7 +81,7 @@ export default function HomePage() {
               </motion.div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* Restaurants Section */}
         <section className="p-4">
