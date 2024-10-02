@@ -1,8 +1,10 @@
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, User, MapPin, Star, ChevronRight, Check, Coffee, Car, Utensils, Droplet, Heart, Share2, Clock, Plus, X, Minus, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
+import { useCart } from '@/hooks/useCart';
+import axios from 'axios';
 
 const Header = ({ name, onBack }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -63,10 +65,10 @@ const RestaurantImage = ({ src, name }) => {
   );
 };
 
-const RestaurantInfo = ({ name, rating, distance, cuisine }) => (
+const RestaurantInfo = ({ name, rating, distance }) => (
   <div className="p-4 -mt-16 relative z-10">
     <h2 className="text-3xl font-bold text-white mb-2">{name}</h2>
-    <p className="text-orange-500 mb-2">{cuisine}</p>
+    {/* <p className="text-orange-500 mb-2">{cuisine}</p> */}
     <div className="flex items-center justify-between">
       <div className="flex items-center">
         <div className="flex items-center bg-green-500 px-2 py-1 rounded-full">
@@ -154,45 +156,6 @@ const Facilities = ({ facilities }) => (
   </div>
 );
 
-const BestOffers = ({ offers }) => {
-  const scrollRef = useRef(null);
-
-  const scroll = (direction) => {
-    const { current } = scrollRef;
-    if (current) {
-      current.scrollBy({ left: direction * 200, behavior: 'smooth' });
-    }
-  };
-
-  return (
-    <div className="p-4 bg-white mt-2">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-black">Best Offers</h3>
-        <button className="text-red-500 text-sm font-medium flex items-center">
-          See all <ChevronRight className="w-4 h-4 ml-1" />
-        </button>
-      </div>
-      <div className="relative">
-        <div ref={scrollRef} className="flex space-x-4 overflow-x-auto scrollbar-hide pb-4">
-          {offers.map((offer, index) => (
-            <motion.div
-              key={index}
-              whileTap={{ scale: 0.95 }}
-              className="flex-shrink-0 w-40 bg-white rounded-lg shadow-md overflow-hidden"
-            >
-              <Image src={offer.image} alt={offer.name} width={160} height={32} className="w-full h-32 object-cover" />
-              <div className="p-2">
-                <h4 className="font-medium text-sm mb-1 text-black">{offer.name}</h4>
-                <p className="text-red-500 text-xs font-semibold">${offer.price}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -201,10 +164,10 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
     className="flex items-center justify-between p-4 border-b border-gray-200"
   >
     <div className="flex items-center">
-      <Image src={item.image} alt={item.name} width={60} height={60} className="rounded-md mr-4" />
+      <Image src={item.imageUrl} alt={item.dishName} width={60} height={60} className="rounded-md mr-4" />
       <div>
-        <h4 className="font-medium text-black">{item.name}</h4>
-        <p className="text-sm text-black">${item.price.toFixed(2)}</p>
+        <h4 className="font-medium text-black">{item.dishName}</h4>
+        <p className="text-sm text-black">₹{item.price}</p>
       </div>
     </div>
     <div className="flex items-center">
@@ -213,8 +176,8 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
           <motion.button
             whileTap={{ scale: 0.95 }}
             className="bg-red-500 text-white p-2 rounded-full"
-            onClick={() => onRemove(item)}
-            aria-label={`Remove ${item.name} from order`}
+            onClick={() => onRemove(item.dishName)}
+            aria-label={`Remove ${item.dishName} from order`}
           >
             <Minus className="w-5 h-5" />
           </motion.button>
@@ -225,7 +188,7 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
         whileTap={{ scale: 0.95 }}
         className="bg-red-500 text-white p-2 rounded-full"
         onClick={() => onAdd(item)}
-        aria-label={`Add ${item.name} to order`}
+        aria-label={`Add ${item.dishName} to order`}
       >
         <Plus className="w-5 h-5" />
       </motion.button>
@@ -233,63 +196,18 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
   </motion.div>
 );
 
-const Menu = ({ items, cart, onAdd, onRemove, totalItems, totalPrice }) => {
-  const [displayedItems, setDisplayedItems] = useState(items.slice(0, 10));
-  const [loading, setLoading] = useState(false);
-  const observerTarget = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && !loading) {
-          loadMore();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
-    };
-  }, [displayedItems, loading]);
-
-  const loadMore = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const newItems = items.slice(displayedItems.length, displayedItems.length + 10);
-      setDisplayedItems(prev => [...prev, ...newItems]);
-      setLoading(false);
-    }, 1000);
-  };
-
+const Menu = ({ items, cart, onAdd, onRemove }) => {
   return (
-    <div className="bg-white mt-2 pb-24">
-      <h3 className="text-lg font-semibold p-4 text-black">Menu</h3>
-      {displayedItems.map((item, index) => (
-        <MenuItem 
-          key={index} 
-          item={item} 
-          quantity={cart[item.name] || 0}
-          onAdd={onAdd} 
+    <div className="p-4">
+      {items.map((item) => (
+        <MenuItem
+          key={item._id}
+          item={item}
+          quantity={cart[item.dishName]?.quantity || 0}
+          onAdd={onAdd}
           onRemove={onRemove}
         />
       ))}
-      {displayedItems.length < items.length && (
-        <div ref={observerTarget} className="flex justify-center p-4">
-          <motion.div
-            animate={{ rotate: loading ? 360 : 0 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          >
-            <Coffee className="w-6 h-6 text-red-500" />
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };
@@ -311,80 +229,63 @@ const CheckoutButton = ({ totalItems, totalPrice }) => (
     className="bg-green-500 text-white py-4 px-6 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center w-full"
   >
     <ShoppingCart className="w-5 h-5 mr-2" />
-    Checkout ({totalItems}) - ${totalPrice.toFixed(2)}
+    Checkout ({totalItems}) - ₹{totalPrice}
   </motion.button>
 );
 
-export default function Component() {
-  const [cart, setCart] = useState({});
+export default function Component({params}) {
+  const { cart,
+    addCart,
+    removeCart,
+    clearCart,
+    getTotalItems,
+    getTotalPrice, } = useCart();
+
+  const [menuForItems, setMenuForItems] = useState([]);
   const [showMenu, setShowMenu] = useState(false);
-  const restaurantData = {
-    name: "Yumppy's",
-    rating: 4.5,
-    distance: 1.2,
-    cuisine: "Fine Dining • Chinese • South Indian",
-    image: "https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg",
-    description: "Experience culinary excellence at Gourmet Delights. Our chefs craft exquisite dishes using the finest ingredients, offering a perfect blend of traditional flavors and modern gastronomy. Enjoy a sophisticated ambiance perfect for both casual dining and special occasions. From our signature seafood platters to delectable pasta dishes, every meal is a celebration of taste and creativity.",
-    facilities: ["Outdoor Seating", "Valet Parking", "Full Bar", "Wheelchair Accessible"],
-    offers: [
-      { name: "Truffle Risotto", image: "https://media.cnn.com/api/v1/images/stellar/prod/220926135452-08-body-chinese-foods-mapo-tofu.jpg?q=w_1110,c_fill", price: 24.99 },
-      { name: "Seafood Platter", image: "https://www.eatthis.com/wp-content/uploads/sites/4/2019/02/general-tso-chicken.jpg?quality=82&strip=1", price: 39.99 },
-      { name: "Tiramisu", image: "https://www.holidify.com/images/cmsuploads/compressed/breakfast-2408818_960_720_20200107183621.jpg", price: 9.99 },
-      { name: "Wine Pairing", image: "https://i0.wp.com/travelgenes.com/wp-content/uploads/2020/10/Uttappam.jpg", price: 29.99 },
-    ]
-  };
+  const [restaurantData, setRestaurantData] = useState({});
 
-  const menuItems = [
-    { name: "Truffle Risotto", image: "https://media.cnn.com/api/v1/images/stellar/prod/220926135452-08-body-chinese-foods-mapo-tofu.jpg?q=w_1110,c_fill", price: 24.99 },
-    { name: "Seafood Platter", image: "https://www.eatthis.com/wp-content/uploads/sites/4/2019/02/general-tso-chicken.jpg?quality=82&strip=1", price: 39.99 },
-    { name: "Tiramisu", image: "https://www.holidify.com/images/cmsuploads/compressed/breakfast-2408818_960_720_20200107183621.jpg", price: 9.99 },
-    { name: "Wine Pairing", image: "https://i0.wp.com/travelgenes.com/wp-content/uploads/2020/10/Uttappam.jpg", price: 29.99 },
-    // Add more menu items here...
-  ];
+  console.log(params.restaurantId);
 
-  // Duplicate the menu items to simulate a larger menu
-  const extendedMenuItems = [...Array(5)].flatMap(() => menuItems);
+  useEffect(() => {
+    const fetchingRestaurantData = async () => {
+      try{
+        const response = await axios.get(`/api/vendor/restaurant?restaurantId=${params.restaurantId}`);
+        setRestaurantData(response.data._doc);
+        console.log('menu Data: ', response.data.menu);
+        setMenuForItems(response.data.menu);
+      }catch(error){
+        console.error('Error fetching restaurant data', error);
+      }
+    };
+    fetchingRestaurantData();
+  }, [params.restaurantId]);
 
   const handleAddToCart = (item) => {
-    setCart(prev => ({
-      ...prev,
-      [item.name]: (prev[item.name] || 0) + 1
-    }));
+    addCart(item);
   };
 
   const handleRemoveFromCart = (item) => {
-    setCart(prev => {
-      const newCart = { ...prev };
-      if (newCart[item.name] > 1) {
-        newCart[item.name]--;
-      } else {
-        delete newCart[item.name];
-      }
-      return newCart;
-    });
+    removeCart(item);
   };
-
-  const totalItems = Object.values(cart).reduce((sum, count) => sum + count, 0);
-  const totalPrice = Object.entries(cart).reduce((sum, [itemName, count]) => {
-    const item = extendedMenuItems.find(i => i.name === itemName);
-    return sum + (item ? item.price * count : 0);
-  }, 0);
+  
+  const totalItems = getTotalItems();
+  const totalPrice = getTotalPrice();
 
   return (
     <div className="bg-gray-100 min-h-screen pb-28">
-      <Header name={restaurantData.name} onBack={() => console.log('Go back')} />
+      <Header name={restaurantData.restaurantName} onBack={() => console.log('Go back')} />
       <main>
-        <RestaurantImage src={restaurantData.image} name={restaurantData.name} />
+        <RestaurantImage src={'https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg'} name={restaurantData.name} />
         <RestaurantInfo 
-          name={restaurantData.name} 
+          name={restaurantData.restaurantName} 
           rating={restaurantData.rating} 
-          distance={restaurantData.distance}
-          cuisine={restaurantData.cuisine}
+          distance={'1.2'}
+          // cuisine={restaurantData.cuisine}
         />
         <QuickActions />
-        <Description text={restaurantData.description} />
-        <Facilities facilities={restaurantData.facilities} />
-        <BestOffers offers={restaurantData.offers} />
+        <Description text={"Experience culinary excellence at Gourmet Delights. Our chefs craft exquisite dishes using the finest ingredients, offering a perfect blend of traditional flavors and modern gastronomy. Enjoy a sophisticated ambiance perfect for both casual dining and special occasions. From our signature seafood platters to delectable pasta dishes, every meal is a celebratio"} />
+        <Facilities facilities={["Outdoor Seating", "Valet Parking", "Full Bar", "Wheelchair Accessible"]} />
       </main>
       <AnimatePresence>
         {showMenu && (
@@ -402,12 +303,10 @@ export default function Component() {
               </button>
             </div>
             <Menu 
-              items={extendedMenuItems} 
+              items={menuForItems} 
               cart={cart}
               onAdd={handleAddToCart} 
               onRemove={handleRemoveFromCart}
-              totalItems={totalItems}
-              totalPrice={totalPrice}
             />
             {totalItems > 0 && (
               <div className="fixed bottom-0 left-0 right-0 p-4 bg-white shadow-lg">

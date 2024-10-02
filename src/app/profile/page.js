@@ -114,7 +114,6 @@ export default function Component({params}) {
       try {
         const response = await axios.get('/api/user/getUser', {withCredentials: true});
         if(response.status === 200){
-          console.log('Response: ',response);
           setUserData(response.data);
         }else{
           console.error('An error occurred while fetching user data: ', error);
@@ -128,7 +127,6 @@ export default function Component({params}) {
 
   }, []);
 
-  console.log(datauser);
 
   const router = useRouter();
 
