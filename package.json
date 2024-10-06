@@ -35,7 +35,7 @@
     "lucide-react": "^0.447.0",
     "mongodb": "^6.9.0",
     "mongoose": "^8.7.0",
-    "multer-gridfs-storage": "^1.3.0",
+    "multer-gridfs-storage": "^5.0.2",
     "next": "^14.2.14",
     "otp-generator": "^4.0.1",
     "react": "^18",
