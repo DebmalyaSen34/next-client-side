@@ -147,7 +147,7 @@ export default function PreperlyLogin() {
               <Checkbox id="remember" className="text-red-600 focus:ring-red-500" />
               <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">Remember me</label>
             </div>
-            <a href="#" className="text-sm text-red-600 hover:text-red-800">Forgot password?</a>
+            <a href="/forgotPassword" className="text-sm text-red-600 hover:text-red-800">Forgot password?</a>
           </div>
           <Button
             type="submit"

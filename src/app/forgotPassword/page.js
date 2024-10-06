@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, ChevronRight, Key, Lock, Phone, Shield } from "lucide-react";
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const FloatingKey = ({ delay }) => (
   <motion.div
@@ -30,6 +31,7 @@ export default function ForgotPassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
@@ -38,9 +40,28 @@ export default function ForgotPassword() {
       setError('Please enter a valid 10-digit phone number');
       return;
     }
-    // TODO: Implement API call to send OTP
-    console.log('Sending OTP to', phoneNumber);
-    setStep(2);
+
+    try{
+        const otpResponse = await fetch('/api/otp/sendOtp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({mobileNumber: phoneNumber}),
+        });
+
+        const otpData = await otpResponse.json();
+
+        if(otpResponse.ok){
+            console.log('OTP sent successfully', otpData);
+            setStep(2);
+        }else{
+          setError(otpData.message || 'Failed to send OTP');
+        }
+    }catch(error){
+        console.error('Error sending OTP', error);
+        setError('An error occurred. Please try again later.');
+    }
   };
 
   const handleOtpSubmit = async (e) => {
@@ -50,9 +71,24 @@ export default function ForgotPassword() {
       setError('Please enter a valid 6-digit OTP');
       return;
     }
-    // TODO: Implement API call to verify OTP
-    console.log('Verifying OTP', otp);
-    setStep(3);
+
+    try {
+      const verificationReponse = await fetch(`/api/otp/verifyOtp?mobileNumber=${encodeURIComponent(phoneNumber)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ otp }),
+      });
+
+      if(verificationReponse.ok){
+        console.log('Verification successful');
+        setStep(3);
+      }
+    } catch (error) {
+      console.error('An error occurred while verifying OTP: ', error);
+      setError('Verification failed');
+    }
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -66,9 +102,30 @@ export default function ForgotPassword() {
       setError('Passwords do not match');
       return;
     }
-    // TODO: Implement API call to change password
-    console.log('Changing password');
-    setStep(4);
+
+    try{
+      const updatePasswordResponse = await fetch('/api/user/getUser/updateUserPassword', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mobileNumber: phoneNumber,
+          newPassword: newPassword,
+        }),
+      });
+
+      if(updatePasswordResponse.ok){
+        console.log('Password updated successfully');
+        setStep(4);
+      }else{
+        console.error('Failed to update password');
+        setError('Failed to update password');
+      }
+    }catch(error){
+      console.error('An error occurred while updating password: ', error);
+      setError('An error occurred. Please try again later.');
+    }
   };
 
   return (
