@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Utensils, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Clock, Utensils, Eye, EyeOff, ChevronRight, AlertCircle } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const FloatingPlate = ({ delay }) => (
   <motion.div
@@ -31,13 +32,65 @@ export default function PreperlyLogin() {
   const [username, setUsername] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [fullName, setFullName] = useState('');
+  const [errors, setErrors] = useState({
+    username: '',
+    email: '',
+    mobileNumber: '',
+    password: '',
+  });
   const router = useRouter();
+
+  useEffect(() => {
+    validateUsername(username);
+    validateEmail(email);
+    validateMobileNumber(mobileNumber);
+    validatePassword(password);
+  }, [username, email, mobileNumber, password]);
+
+  const validateUsername = (value) => {
+    if (value.length < 3) {
+      setErrors(prev => ({ ...prev, username: 'Username must be at least 3 characters long' }));
+    } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+      setErrors(prev => ({ ...prev, username: 'Username can only contain letters, numbers, and underscores' }));
+    } else {
+      setErrors(prev => ({ ...prev, username: '' }));
+    }
+  };
+
+  const validateEmail = (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+    } else {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
+  const validateMobileNumber = (value) => {
+    if (!/^\d{10}$/.test(value)) {
+      setErrors(prev => ({ ...prev, mobileNumber: 'Please enter a valid 10-digit mobile number' }));
+    } else {
+      setErrors(prev => ({ ...prev, mobileNumber: '' }));
+    }
+  };
+
+  const validatePassword = (value) => {
+    if (value.length < 8) {
+      setErrors(prev => ({ ...prev, password: 'Password must be at least 8 characters long' }));
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?])/.test(value)) {
+      setErrors(prev => ({ ...prev, password: 'Password must contain uppercase, lowercase, digit, and special character' }));
+    } else {
+      setErrors(prev => ({ ...prev, password: '' }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    const userData = { email, password, username, mobileNumber, fullName};
-    try{
+    if (errors.username || errors.email || errors.mobileNumber || errors.password) {
+      return;
+    }
+    const userData = { email, password, username, mobileNumber, fullName };
+    try {
       const response = await fetch('/api/user/register', {
         method: 'POST',
         headers: {
@@ -47,8 +100,7 @@ export default function PreperlyLogin() {
       });
       const data = await response.json();
       if (response.ok) {
-        // Handle successful login
-        console.log('Registeration successful:', data);
+        console.log('Registration successful:', data);
 
         const otpResponse = await fetch('/api/otp/sendOtp', {
           method: 'POST',
@@ -58,19 +110,17 @@ export default function PreperlyLogin() {
           body: JSON.stringify({ mobileNumber }),
         });
         const otpData = await otpResponse.json();
-        if(otpResponse.ok){
-          // redirecting to otpVerification page
+        if (otpResponse.ok) {
           router.push(`/otpVerification?mobileNumber=${encodeURIComponent(mobileNumber)}`);
           console.log('OTP sent successfully: ', otpData);
-        }else{
+        } else {
           console.error('Failed to send OTP:', otpData.error);
         }
       } else {
-        // Handle registration error
         console.error('Registration failed:', data.error);
       }
-    }catch(error){
-      console.error('An Error occured:', error);
+    } catch (error) {
+      console.error('An Error occurred:', error);
     }
   };
 
@@ -97,29 +147,20 @@ export default function PreperlyLogin() {
             }}
             className="relative"
           >
-            <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center">
-              <Utensils className="text-white h-12 w-12" />
-            </div>
-            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-              <motion.div
-                animate={{
-                  rotate: [0, -360],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              >
-                <Clock className="text-white h-6 w-6" />
-              </motion.div>
+            <div className="w-24 h-24 bg-white-600 rounded-full flex items-center justify-center">
+              <Image
+                src="/images/preperlysvglogo.svg"
+                alt="Preperly Logo"
+                layout="fill"
+                objectFit="contain"
+              />
             </div>
           </motion.div>
         </div>
         <h2 className="text-3xl font-bold text-center text-red-800 mb-6">Welcome to Preperly</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-            <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <Input
               id="username"
               type="text"
@@ -129,10 +170,23 @@ export default function PreperlyLogin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-orange-500"
               required
             />
+            <AnimatePresence>
+              {errors.username && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-red-500 text-sm mt-1"
+                >
+                  <AlertCircle className="inline mr-1 h-4 w-4" />
+                  {errors.username}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
           <div>
-            <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
             <Input
               id="fullName"
               type="text"
@@ -155,18 +209,44 @@ export default function PreperlyLogin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-orange-500"
               required
             />
+            <AnimatePresence>
+              {errors.email && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-red-500 text-sm mt-1"
+                >
+                  <AlertCircle className="inline mr-1 h-4 w-4" />
+                  {errors.email}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
           <div>
-            <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
             <Input
               id="mobileNumber"
-              type="number"
+              type="tel"
               placeholder="mobile number"
               value={mobileNumber}
               onChange={(e) => setMobileNumber(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-orange-500"
               required
             />
+            <AnimatePresence>
+              {errors.mobileNumber && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-red-500 text-sm mt-1"
+                >
+                  <AlertCircle className="inline mr-1 h-4 w-4" />
+                  {errors.mobileNumber}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -188,6 +268,19 @@ export default function PreperlyLogin() {
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+            <AnimatePresence>
+              {errors.password && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-red-500 text-sm mt-1"
+                >
+                  <AlertCircle className="inline mr-1 h-4 w-4" />
+                  {errors.password}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -198,45 +291,11 @@ export default function PreperlyLogin() {
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-red-600 to-orange-500 text-white py-2 px-4 rounded-md hover:from-red-700 hover:to-orange-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300"
+            disabled={errors.username || errors.email || errors.mobileNumber || errors.password}
           >
             Register
           </Button>
         </form>
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <Button
-              className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 flex items-center justify-center"
-            >
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Register with Google
-            </Button>
-          </div>
-        </div>
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
