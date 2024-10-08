@@ -31,6 +31,7 @@ export default function HomePage() {
     <Layout>
       {/* Main Content */}
       <main className="flex-grow overflow-y-auto">
+        
         {/* Featured Restaurant */}
         <div className="relative">
           <img
@@ -55,33 +56,6 @@ export default function HomePage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-800" />
           </div>
         </div>
-
-        {/* Recommended Section */}
-        {/* <section className="p-4">
-          <h3 className="text-lg font-semibold mb-2 text-orange-800">Recommended</h3>
-          <div className="flex space-x-4 overflow-x-auto pb-2">
-            {[1, 2, 3].map((item) => (
-              <motion.div
-                key={item}
-                whileHover={{ scale: 1.05 }}
-                className="flex-shrink-0 w-32 h-32 rounded-2xl overflow-hidden relative shadow-md"
-              >
-                <img
-                  src={'https://assets.architecturaldigest.in/photos/64f85037ec0bc118bdd98aba/master/pass/Untitled%20design%20(14).png'}
-                  alt={`Recommended ${item}`}
-                  className="w-full h-full object-cover"
-                />
-                <motion.div
-                  className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm"
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.8 }}
-                >
-                  <Heart className="w-4 h-4 text-red-500" />
-                </motion.div>
-              </motion.div>
-            ))}
-          </div>
-        </section> */}
 
         {/* Restaurants Section */}
         <section className="p-4">
