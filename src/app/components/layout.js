@@ -19,7 +19,9 @@ export default function Layout({ children }) {
           <div className="w-10 h-10 bg-red rounded-full flex items-center justify-center text-orange-600 font-bold text-xl mr-2">
             <Image src="/images/whitePreperlyLogo.svg" alt="Logo" width={100} height={100} />
           </div>
+          <Link href="/home" aria-label="Go to home">
           <h1 className="text-2xl font-bold text-white">PREPERLY</h1>
+          </Link>
         </div>
         <Link href="/profile" aria-label="Go to profile">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
@@ -49,7 +51,7 @@ export default function Layout({ children }) {
             </Link>
           </li>
           <li>
-            <Link href="/user/history" className={`flex flex-col items-center ${currentPath === '/restaurant' ? 'text-red-500' : 'text-gray-500'}`}>
+            <Link href="/history" className={`flex flex-col items-center ${currentPath === '/history' ? 'text-red-500' : 'text-gray-500'}`}>
               <History className="w-6 h-6" />
               <span className="text-xs mt-1">History</span>
             </Link>

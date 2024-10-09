@@ -11,6 +11,7 @@ import MenuItem from '@/app/components/restaurantPage/MenuItem';
 import Facilities from '@/app/components/restaurantPage/Facilities';
 import QuickActions from '@/app/components/restaurantPage/QuickActions';
 import Description from '@/app/components/restaurantPage/Description';
+import Link from 'next/link';
 
 
 const Menu = ({ items, cart, onAdd, onRemove }) => {
@@ -41,6 +42,7 @@ const ShowMenuButton = ({ onClick }) => (
 );
 
 const CheckoutButton = ({ totalItems, totalPrice }) => (
+  <Link href="/cart">
   <motion.button
     whileTap={{ scale: 0.95 }}
     className="bg-green-500 text-white py-4 px-6 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center w-full"
@@ -48,6 +50,7 @@ const CheckoutButton = ({ totalItems, totalPrice }) => (
     <ShoppingCart className="w-5 h-5 mr-2" />
     Checkout ({totalItems}) - ₹{totalPrice}
   </motion.button>
+  </Link>
 );
 
 export default function Component({params}) {

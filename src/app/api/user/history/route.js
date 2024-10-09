@@ -23,11 +23,23 @@ export async function GET(request){
 
         const userId = decodedToken.id;
 
-        const allOrders = await Order.find({customerId: userId});
+        const allOrders = await Order.find({customerId: userId}).populate({
+            path: 'restaurantId',
+            model: 'Restaurant',
+            select: 'restaurantName'
+        }).exec();
 
-        console.log('Orders: ', allOrders);
+        const ordersWithDetails = allOrders.map(order => {
+            return{
+                ...order.toObject(),
+                restaurantName: order.restaurantId.restaurantName,
+                orderId: order._id.toString().slice(0, 6)
+        };
+        });
 
-        return NextResponse.json(allOrders, { status: 200 });
+        console.log('Orders with details: ', ordersWithDetails);
+
+        return NextResponse.json(ordersWithDetails, { status: 200 });
     } catch (error) {
         console.error('Error fetching user data:', error);
         return NextResponse.json({ message: 'An error occurred while fetching user data' }, { status: 500 });        

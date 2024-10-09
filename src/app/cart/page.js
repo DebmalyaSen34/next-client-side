@@ -1,29 +1,59 @@
 "use client"
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Minus, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Minus, Plus, X, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import Layout from '../components/layout';
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 import { useRouter } from 'next/navigation';
+
 export default function CartPage() {
   const { cart, addCart, removeCart, getTotalPrice } = useCart();
   const [activeTab] = useState('cart');
   const [isDineIn, setIsDineIn] = useState(true);
+  const [showArrivalModal, setShowArrivalModal] = useState(false);
+  const [hours, setHours] = useState(12);
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [period, setPeriod] = useState('PM');
+  const [currentTime, setCurrentTime] = useState('');
   const router = useRouter();
 
   const totalPrice = getTotalPrice();
   const isCartEmpty = Object.keys(cart).length === 0;
 
-  const handlePlaceOrder = async () => {
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        })
+      );
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handlePlaceOrder = () => {
+    setShowArrivalModal(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    const arrivalTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${period}`;
     const response = await fetch('/api/order/sendOrder', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ cart, orderType: isDineIn ? 'Dine-in' : 'Take away' }),
+      body: JSON.stringify({ 
+        cart, 
+        orderType: isDineIn ? 'Dine-in' : 'Take away',
+        arrivalTime 
+      }),
     });
 
     if (response.ok) {
@@ -34,13 +64,24 @@ export default function CartPage() {
     } else {
       console.error('Failed to place order');
     }
-  }
+  };
+
+  const handleCancelTimer = () => {
+    setShowArrivalModal(false);
+  };
+
+  const incrementTime = (setter, value, max, min = 0) => {
+    setter(prevValue => (prevValue + 1 > max ? min : prevValue + 1));
+  };
+
+  const decrementTime = (setter, value, max, min = 0) => {
+    setter(prevValue => (prevValue - 1 < min ? max : prevValue - 1));
+  };
 
   return (
     <Layout>
       <div className="flex flex-col min-h-screen">
         {/* Order Type Switch */}
-        
         <div className="flex justify-end p-4">
           <div className="flex items-center space-x-2 bg-orange-100 rounded-full p-1">
             <button
@@ -152,7 +193,74 @@ export default function CartPage() {
             </button>
           </div>
         )}
+
+        {/* Arrival Time Modal */}
+        <AnimatePresence>
+          {showArrivalModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-red-800 p-6 rounded-xl shadow-lg w-72"
+              >
+                <h2 className="text-white text-xl mb-4">Set arrival time</h2>
+                
+                <div className="flex justify-between text-4xl text-white mb-4">
+                  <div className="flex flex-col items-center">
+                    <button onClick={() => incrementTime(setHours, hours, 12, 1)} className="text-2xl"><ChevronUp /></button>
+                    <span>{hours.toString().padStart(2, '0')}</span>
+                    <button onClick={() => decrementTime(setHours, hours, 12, 1)} className="text-2xl"><ChevronDown /></button>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <button onClick={() => incrementTime(setMinutes, minutes, 59)} className="text-2xl"><ChevronUp /></button>
+                    <span>{minutes.toString().padStart(2, '0')}</span>
+                    <button onClick={() => decrementTime(setMinutes, minutes, 59)} className="text-2xl"><ChevronDown /></button>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <button onClick={() => incrementTime(setSeconds, seconds, 59)} className="text-2xl"><ChevronUp /></button>
+                    <span>{seconds.toString().padStart(2, '0')}</span>
+                    <button onClick={() => decrementTime(setSeconds, seconds, 59)} className="text-2xl"><ChevronDown /></button>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <button onClick={() => setPeriod(prev => prev === 'AM' ? 'PM' : 'AM')} className="text-2xl"><ChevronUp /></button>
+                    <span className="text-2xl">{period}</span>
+                    <button onClick={() => setPeriod(prev => prev === 'AM' ? 'PM' : 'AM')} className="text-2xl"><ChevronDown /></button>
+                  </div>
+                </div>
+
+                <div className="text-2xl text-white mb-4 text-center">
+                  {currentTime}
+                </div>
+
+                <div className="flex justify-between">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 rounded-md border border-white text-white"
+                    onClick={handleCancelTimer}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 rounded-md bg-red-600 text-white"
+                    onClick={handleConfirmOrder}
+                  >
+                    Save
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
-  )
+  );
 }
