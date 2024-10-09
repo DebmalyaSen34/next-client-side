@@ -6,6 +6,8 @@ export async function middleware(request) {
 
     const protectedRoutes = ['/profile', 'restaurant', '/home'];
 
+    const authenticationRoutes = ['/login', '/register', '/'];
+
     if (protectedRoutes.includes(request.nextUrl.pathname)) {
         if (token) {
             try {
@@ -20,7 +22,7 @@ export async function middleware(request) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
-    if (request.nextUrl.pathname === '/') {
+    if (authenticationRoutes.includes(request.nextUrl.pathname)) {
         if (token) {
             try {
                 verifyToken(token);
@@ -39,5 +41,5 @@ export async function middleware(request) {
 }
 
 export const config = {
-    matcher: ['/home', '/profile', '/restaurant', '/'],
+    matcher: ['/home', '/profile', '/restaurant', '/', '/register', '/login'],
 };

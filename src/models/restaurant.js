@@ -40,7 +40,7 @@ export const restaurantSchema = new mongoose.Schema({
         required: [true, "Rating is required"],
         min: 1,
         max: 5
-    }
+    },
 });
 
 restaurantSchema.pre("save", function (next) {

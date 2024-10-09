@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Menu, User, Home, Search, ShoppingCart } from 'lucide-react'
+import { Menu, User, Home, Search, ShoppingCart, History } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -16,8 +16,8 @@ export default function Layout({ children }) {
           <Menu className="w-6 h-6" />
         </button> */}
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-red rounded-full flex items-center justify-center text-orange-600 font-bold text-xl mr-2">
-            <Image src="/images/preperlyVector.svg" alt="Logo" width={32} height={32} />
+          <div className="w-10 h-10 bg-red rounded-full flex items-center justify-center text-orange-600 font-bold text-xl mr-2">
+            <Image src="/images/whitePreperlyLogo.svg" alt="Logo" width={100} height={100} />
           </div>
           <h1 className="text-2xl font-bold text-white">PREPERLY</h1>
         </div>
@@ -43,15 +43,15 @@ export default function Layout({ children }) {
             </Link>
           </li>
           <li>
-            <Link href="/restaurant" className={`flex flex-col items-center ${currentPath === '/restaurant' ? 'text-red-500' : 'text-gray-500'}`}>
-              <Search className="w-6 h-6" />
-              <span className="text-xs mt-1">Search</span>
-            </Link>
-          </li>
-          <li>
             <Link href="/cart" className={`flex flex-col items-center ${currentPath === '/cart' ? 'text-red-500' : 'text-gray-500'}`}>
               <ShoppingCart className="w-6 h-6" />
               <span className="text-xs mt-1">Cart</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/user/history" className={`flex flex-col items-center ${currentPath === '/restaurant' ? 'text-red-500' : 'text-gray-500'}`}>
+              <History className="w-6 h-6" />
+              <span className="text-xs mt-1">History</span>
             </Link>
           </li>
         </ul>

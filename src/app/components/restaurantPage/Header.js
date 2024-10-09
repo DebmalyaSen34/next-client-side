@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-const Header =({ name, onBack }) => {
+const Header =({ name }) => {
     const [isScrolled, setIsScrolled] = useState(false);
-  
+    const router = useRouter();
+
     useEffect(() => {
       const handleScroll = () => {
         setIsScrolled(window.scrollY > 50);
@@ -12,6 +14,10 @@ const Header =({ name, onBack }) => {
       window.addEventListener('scroll', handleScroll);
       return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const onBack = () => {
+      router.back();
+    };
   
     return (
       <motion.header 

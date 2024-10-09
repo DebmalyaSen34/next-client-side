@@ -9,10 +9,10 @@ import { generateToken } from "@/lib/jwt";
 
 export async function POST(request) {
     try {
-        const { email, password } = await request.json();
+        const { mobileNumber, password } = await request.json();
         await connectToDatabase();
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ mobileNumber });
 
         if (user && await bcrypt.compare(password, user.password)) {
             const token = generateToken({ id: user._id, username: user.username });

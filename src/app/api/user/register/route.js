@@ -22,7 +22,7 @@ export async function POST(request) {
         
         await clientPromise();
 
-        const existingUser = await User.findOne({username: username});
+        const existingUser = await User.findOne({mobileNumber: mobileNumber});
         if(existingUser){
             return NextResponse.json({ error: "user already exists!"});
         }

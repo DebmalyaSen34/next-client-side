@@ -29,7 +29,7 @@ const FloatingPlate = ({ delay }) => (
 
 export default function PreperlyLogin() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -41,7 +41,7 @@ export default function PreperlyLogin() {
     setLoginError('');
     
     try {
-      const response = await axios.post('/api/user/login', { email, password}, {withCredentials: true});
+      const response = await axios.post('/api/user/login', { mobileNumber, password}, {withCredentials: true});
       console.log(response.data);
       router.push('/home');
     } catch (error) {
@@ -73,9 +73,6 @@ export default function PreperlyLogin() {
       >
         <div className="flex justify-center mb-8">
           <motion.div
-            animate={{
-              rotate: [0, 360],
-            }}
             transition={{
               duration: 20,
               repeat: Infinity,
@@ -84,7 +81,7 @@ export default function PreperlyLogin() {
             className="relative w-24 h-24 bg-white-600 rounded-full flex items-center justify-center"
           >
               <Image
-                src="/images/preperlysvglogo.svg"
+                src="/images/preperlyLogo.svg"
                 alt="Preperly Logo"
                 layout="fill"
                 objectFit="contain"
@@ -110,13 +107,13 @@ export default function PreperlyLogin() {
         </AnimatePresence>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
             <Input
-              id="email"
-              type="email"
-              placeholder="youremail@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="mobileNumber"
+              type="number"
+              placeholder="798XXXXXXX"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-orange-500"
               required
             />

@@ -137,9 +137,6 @@ export default function PreperlyLogin() {
       >
         <div className="flex justify-center mb-8">
           <motion.div
-            animate={{
-              rotate: [0, 360],
-            }}
             transition={{
               duration: 20,
               repeat: Infinity,
@@ -149,7 +146,7 @@ export default function PreperlyLogin() {
           >
             <div className="w-24 h-24 bg-white-600 rounded-full flex items-center justify-center">
               <Image
-                src="/images/preperlysvglogo.svg"
+                src="/images/preperlyLogo.svg"
                 alt="Preperly Logo"
                 layout="fill"
                 objectFit="contain"
