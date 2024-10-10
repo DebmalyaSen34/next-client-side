@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, User, Home, Search, ShoppingCart, ChevronRight, Clock } from 'lucide-react';
 import Link from 'next/link';
 import Layout from '../components/layout';
+import { useRouter } from 'next/navigation';
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState('ongoing');
   const [orders, setOrders] = useState({
     ongoing: [], history: []
   });
+  const router = useRouter();
 
   React.useEffect(() => {
     const fetchOrders = async () => {
@@ -37,9 +39,14 @@ export default function OrdersPage() {
     }));
   };
 
-  const handleTrackOrder = (orderId) => {
-    // Implement order tracking logic here
-    console.log(`Tracking order ${orderId}`);
+  const handleViewDetails = (order) => {
+    console.log(`Tracking order ${order._id}`);
+
+    if(order && order._id){
+      router.push(`history/orderDetails/${order._id}`);
+    }else{
+      console.error('Order not found', order);
+    }
   };
 
   const renderOrders = (orderList, isHistory = false) => (
@@ -73,7 +80,7 @@ export default function OrdersPage() {
           {!isHistory && (
             <div className="flex space-x-2">
               <button
-                onClick={() => handleTrackOrder(order._id)}
+                onClick={() => handleViewDetails(order)}
                 className="flex-1 bg-red-800 text-white py-2 rounded-md font-semibold transition-colors hover:bg-red-700"
               >
                 View details
@@ -88,7 +95,7 @@ export default function OrdersPage() {
           )}
           {isHistory && (
             <button
-              onClick={() => handleTrackOrder(order._id)}
+              onClick={() => handleViewDetails(order)}
               className="w-full bg-red-600 text-white py-2 rounded-md font-semibold transition-colors hover:bg-gray-200"
             >
               View Details
