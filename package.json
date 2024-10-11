@@ -2,6 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -21,6 +22,7 @@
     "badge-maker": "^4.0.0",
     "bcrypt": "^5.1.1",
     "canvas-confetti": "^1.9.3",
+    "chromedriver": "^129.0.4",
     "class-variance-authority": "^0.7.0",
     "client": "file:",
     "clsx": "^2.1.1",
@@ -42,14 +44,17 @@
     "multer-gridfs-storage": "^5.0.2",
     "next": "^14.2.14",
     "otp-generator": "^4.0.1",
+    "puppeteer": "^23.5.3",
     "react": "^18",
     "react-dom": "^18",
     "react-native-safe-area-context": "^4.11.0",
     "react-native-screens": "^3.34.0",
     "react-router-dom": "^6.26.2",
+    "selenium-webdriver": "^4.25.0",
     "skeleton": "^0.1.2",
     "tailwind-merge": "^2.5.3",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vercel": "^37.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.7",

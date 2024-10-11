@@ -17,20 +17,21 @@ export async function GET(request, {params}){
     try {
         const {orderId} = params;
         
-        console.log(orderId);
-
         if(!orderId){
             return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 });
         }
         
         await connectToDatabase();
 
-        const orderDetails = await Order.findById(orderId);
-
+        const orderDetails = await Order.findById(orderId).populate({
+            path:'restaurantId',
+            select: 'restaurantName'
+        });
+        
         if(!orderDetails){
             return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
-
+        
         return NextResponse.json(orderDetails);
 
     } catch (error) {

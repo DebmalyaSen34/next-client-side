@@ -1,5 +1,11 @@
 # Next.js Project
 
+[![wakatime](https://wakatime.com/badge/github/DebmalyaSen34/next-client-side.svg)](https://wakatime.com/badge/github/DebmalyaSen34/next-client-side)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/DebmalyaSen34/next-client-side/ci.yml?branch=main)](https://wakatime.com/badge/github/DebmalyaSen34/next-client-side)
+[![License](https://img.shields.io/github/license/DebmayaSen34/next-client-side)](https://wakatime.com/badge/github/DebmalyaSen34/next-client-side)
+[![Dependencies](https://img.shields.io/david/your-username/your-repo)](https://wakatime.com/badge/github/DebmalyaSen34/next-client-side)
+[![Vercel](https://vercelbadge.vercel.app/api/debmalyasen34/next-client-side)](https://vercel.com/debmalyasen34/next-client-side)
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Table of Contents
@@ -13,6 +19,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
   - [Features](#features)
   - [Scripts](#scripts)
   - [Development](#development)
+  - [Routes](#routes)
 
 ## Getting Started
 
@@ -43,7 +50,7 @@ pnpm dev
 
 Open http://localhost:3000 with your browser to see the result.
 
-You can start editing the page by modifying src/app/page.js. The page auto-updates as you edit the file.
+You can start editing the page by modifying `src/app/page.js`. The page auto-updates as you edit the file.
 
 ## Project Structure
 ```
@@ -85,7 +92,7 @@ tailwind.config.js
 + `types/`: Contains type definitions.
 + `components.json`: Configuration file for UI components.
 + `jsconfig.json`: Configuration file for JavaScript projects.
-+ `next.config.mj`s: Next.js configuration file.
++ `next.config.mjs`: Next.js configuration file.
 + `package.json`: Contains project metadata and dependencies.
 + `postcss.config.mjs`: Configuration file for PostCSS.
 + `README.md`: Project documentation.
@@ -105,14 +112,81 @@ tailwind.config.js
 + **Responsive UI**: Designed with Tailwind CSS for responsive design.
 + **State Management**: Efficient state management using React hooks.
 + **Database Integration**: Connected to MongoDB using Mongoose.
-  
++ **File Upload**: Upload files to Vercel Blob and store metadata in MongoDB.
++ **Authentication**: Middleware for route protection and token verification.
+
 ## Scripts
 + `dev`: Runs the development server.
-+ `build`: Starts the application for production
-+ `start`: Starts the production server
-+ `lint`: Runs ESlint to check for linting errors.
-  
++ `build`: Starts the application for production.
++ `start`: Starts the production server.
++ `lint`: Runs ESLint to check for linting errors.
+
 ## Development
 The easiest way to deploy your Next.js app is to use the Vercel Platform from the creators of Next.js.
 
 Check out our **Next.js deployment documentation** for more details.
+
+## Routes
+### Public Routes
+- `/`: Home page.
+- `/login`: Login page.
+- `/register`: Registration page.
+
+### Protected Routes
+- `/home`: User's home page.
+- `/profile`: User's profile page.
+- `/restaurant`: Restaurant-related pages.
+
+### API Routes
+- `/api/upload`: Handles file uploads.
+- `/api/otp/sendOtp`: Sends OTP for verification.
+
+### Middleware
+The middleware in `src/middleware.js` handles authentication and route protection. It verifies tokens for protected routes and redirects unauthenticated users to the login page.
+
+```js
+import { NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/jwt';
+
+export async function middleware(request) {
+    const token = request.cookies.get('token')?.value;
+
+    const protectedRoutes = ['/profile', 'restaurant', '/home'];
+    const authenticationRoutes = ['/login', '/register', '/'];
+
+    if (protectedRoutes.includes(request.nextUrl.pathname)) {
+        if (token) {
+            try {
+                verifyToken(token);
+                return NextResponse.next();
+            } catch (error) {
+                console.log("Invalid token, redirecting to register");
+                return NextResponse.redirect(new URL('/login', request.url));
+            }
+        } else {
+            console.log("No token found, redirecting to register");
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+    }
+    if (authenticationRoutes.includes(request.nextUrl.pathname)) {
+        if (token) {
+            try {
+                verifyToken(token);
+                return NextResponse.redirect(new URL('/home', request.url));
+            } catch (error) {
+                console.log("Invalid token, redirecting to register");
+                return NextResponse.redirect(new URL('/', request.url));
+            }
+        } else {
+            console.log("No token found, redirecting to register");
+            return NextResponse.next();
+        }
+    }
+
+    return NextResponse.next();
+}
+
+export const config = {
+    matcher: ['/home', '/profile', '/restaurant', '/', '/register', '/login'],
+};
+```

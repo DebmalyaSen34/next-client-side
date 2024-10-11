@@ -4,7 +4,8 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Clock, MapPin, Phone, Truck } from 'lucide-react'
 import Link from 'next/link'
-import Layout from '@/app/components/layout'
+import Layout from '@/app/components/layout';
+import { formatDate } from '@/lib/utils'
 
 export default function OrderDetailPage({ params }) {
   const { orderId } = params
@@ -18,7 +19,7 @@ export default function OrderDetailPage({ params }) {
         if (!orderResponse.ok) {
           throw new Error('Failed to fetch order details')
         }
-        const data = await orderResponse.json()
+        const data = await orderResponse.json();
         setOrder(data)
       } catch (error) {
         console.error('Error fetching order details:', error)
@@ -74,11 +75,12 @@ export default function OrderDetailPage({ params }) {
     )
   }
 
+
   return (
     <Layout>
       <main className="flex-grow p-4 bg-gray-50">
         <div className="max-w-2xl mx-auto">
-          <Link href="/orders" className="inline-flex items-center text-red-800 mb-6 hover:underline">
+          <Link href="/history" className="inline-flex items-center text-red-800 mb-6 hover:underline">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Orders
           </Link>
@@ -89,22 +91,22 @@ export default function OrderDetailPage({ params }) {
             className="bg-white rounded-lg shadow-lg overflow-hidden"
           >
             <div className="bg-red-800 text-white p-6">
-              <h1 className="text-2xl font-bold mb-2">Order #{order.orderId}</h1>
-              <p className="text-red-200">{order.restaurantName}</p>
+              <h1 className="text-2xl font-bold mb-2">{order.restaurantId.restaurantName}</h1>
+              <p className="text-white">Order #{order._id.slice(0, 6)}</p>
             </div>
             
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center text-gray-600">
                   <Clock className="w-5 h-5 mr-2" />
-                  <span>{order.orderDate}</span>
+                  <span>{formatDate(order.orderDate)}</span>
                 </div>
                 <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
                   {order.status}
                 </div>
               </div>
               
-              <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+              <h2 className="text-xl font-semibold mb-4 text-red-800">Order Items</h2>
               <ul className="divide-y divide-gray-200">
                 {order.items.map((item, index) => (
                   <motion.li 
