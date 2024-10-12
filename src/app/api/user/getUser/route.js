@@ -1,8 +1,6 @@
-import { withSession, sessionOptions } from "@/lib/session";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/userModel";
 import { NextResponse } from "next/server";
-import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
 
@@ -10,7 +8,9 @@ export async function GET(request) {
     try {
         await connectToDatabase();
 
-        const token = cookies().get('token')?.value;
+        const cookieHeader = request.headers.get('cookie');
+        const cookies = new Map(cookieHeader.split(';').map(cookie => cookie.trim().split('=')));
+        const token = cookies.get('token');
 
         if (!token) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
