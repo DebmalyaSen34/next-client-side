@@ -42,7 +42,7 @@ const Header =({ name }) => {
               {name}
             </motion.h1>
           )}
-          <User className="w-6 h-6 text-white" />
+          <User onClick={() => router.push('/profile')} className="w-6 h-6 text-white" />
         </div>
       </motion.header>
     );

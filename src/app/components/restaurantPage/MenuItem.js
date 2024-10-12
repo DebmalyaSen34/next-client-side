@@ -11,9 +11,11 @@ const MenuItem = ({ item, quantity, onAdd, onRemove }) => (
       className="flex items-center justify-between p-4 border-b border-gray-200"
     >
       <div className="flex items-center">
-        <Image src={item.imageUrl} alt={item.dishName} width={60} height={60} className="rounded-md mr-4" />
+      <div className='w-16 h-16 relative mr-4'>
+        <Image src={item.imageUrl} alt={item.dishName} className="rounded-md" layout='fill' objectFit='cover' />
+        </div>
         <div>
-          <h4 className="font-medium text-black">{item.dishName}</h4>
+          <h4 className="font-medium text-black w-32">{item.dishName}</h4>
           <p className="text-sm text-black">₹{item.price}</p>
         </div>
       </div>
