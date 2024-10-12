@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { CheckCircle, ArrowLeft, Home, QrCode } from 'lucide-react'
@@ -52,6 +52,7 @@ export default function OrderSuccessPage() {
   if (loading) {
     return (
       <Layout>
+      <Suspense callback={<div>Loading...</div>}>
         <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50">
           <motion.div
             animate={{ rotate: 360 }}
@@ -61,6 +62,7 @@ export default function OrderSuccessPage() {
           </motion.div>
           <p className="mt-4 text-lg text-gray-600">Loading order details...</p>
         </div>
+        </Suspense>
       </Layout>
     )
   }
@@ -68,18 +70,21 @@ export default function OrderSuccessPage() {
   if (error || !orderDetails) {
     return (
       <Layout>
+      <Suspense callback={<div>Loading...</div>}>
         <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50">
           <p className="text-xl text-red-600 mb-4">{error || 'Order details not found'}</p>
           <Link href="/home" className="text-red-600 hover:underline">
             Return to Home
           </Link>
         </div>
+        </Suspense>
       </Layout>
     )
   }
 
   return (
     <Layout>
+      <Suspense callback={<div>Loading...</div>}>
       <div className="flex flex-col items-center justify-center min-h-screen bg-orange-50 p-4">
         <motion.div
           initial={{ scale: 0 }}
@@ -170,6 +175,7 @@ export default function OrderSuccessPage() {
           </motion.div>
         </motion.div>
       </div>
+      </Suspense>
     </Layout>
   )
 }
