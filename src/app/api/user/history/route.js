@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import User from "@/models/userModel";
 import Order from "@/models/order";
 import connectToDatabase from "@/lib/mongodb";
 import { verifyToken } from "@/lib/jwt";
@@ -23,11 +22,7 @@ export async function GET(request){
 
         const userId = decodedToken.id;
 
-        const allOrders = await Order.find({customerId: userId}).populate({
-            path: 'restaurantId',
-            model: 'Restaurant',
-            select: 'restaurantName'
-        }).exec();
+        const allOrders = await Order.find({customerId: userId}).populate('restaurantId');
 
         const ordersWithDetails = allOrders.map(order => {
             return{

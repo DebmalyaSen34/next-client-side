@@ -17,7 +17,13 @@ export async function POST(request) {
         if (user && await bcrypt.compare(password, user.password)) {
             const token = generateToken({ id: user._id, username: user.username });
             const response = NextResponse.json({ message: 'Logged in successfully!' });
-            response.cookies.set('token', token, { httpOnly: false, secure: process.env.NODE_ENV === 'production' });
+            response.cookies.set('token', token, { 
+                httpOnly: false,
+                maxAge: 15 * 24 * 60 * 60, 
+                secure: process.env.NODE_ENV === 'production',
+                path: '/' 
+            });
+            console.log(response);
             return response;
         } else {
             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });

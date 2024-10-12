@@ -7,8 +7,6 @@ export function generateToken(payload){
 }
 
 export function verifyToken(token){
-    // const deb = jwt.verify(token, secret);
-    // console.log(deb);
     try{
         return jwt.verify(token, secret);
     }catch(error){

@@ -43,7 +43,21 @@ export default function CartPage() {
   };
 
   const handleConfirmOrder = async () => {
-    const arrivalTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${period}`;
+    const arrivalTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${period}`;
+
+    const [time, modifier] = arrivalTimeString.split(' ');
+    let [stringhours, stringminutes, stringseconds] = time.split(':');
+    if(stringhours === '12'){
+      stringhours = '00';
+    }
+
+    if(modifier === 'PM'){
+      stringhours = parseInt(stringhours, 10) + 12;
+    }
+
+    const now = new Date();
+    const arrivalTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), stringhours, stringminutes, stringseconds);
+
     const response = await fetch('/api/order/sendOrder', {
       method: 'POST',
       headers: {
@@ -56,13 +70,28 @@ export default function CartPage() {
       }),
     });
 
+    
+
+
     if (response.ok) {
       const data = await response.json();
-      console.log(data);
+
       localStorage.removeItem('cart');
-      router.push('/cart/orderSuccessful');
+
+      const qrcodeResponse = await fetch(`/api/order/generateQrCode?orderId=${data.order._id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if(qrcodeResponse.ok){
+        router.push(`/cart/orderSuccessful?orderId=${data.order._id}`);
+      }else{
+        console.error('Failed to generate QR code');
+      }
     } else {
-      console.error('Failed to place order');
+      console.error('Failed to place order! Please try again');
     }
   };
 

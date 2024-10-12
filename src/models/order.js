@@ -48,9 +48,17 @@ const orderSchema = new mongoose.Schema({
     orderType: {
         type: String,
         required: true
+    },
+    isActive: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
+    qrcode: {
+        type: String,
     }
 });
 
-const Order = mongoose.models.debOrder || mongoose.model('debOrder', orderSchema);
+const Order = mongoose.models.debOrders || mongoose.model('debOrders', orderSchema);
 
 export default Order;

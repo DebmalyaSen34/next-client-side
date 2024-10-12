@@ -1,32 +1,37 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, User, Home, Search, ShoppingCart, ChevronRight, Clock } from 'lucide-react';
+import { Menu, User, Home, Search, ShoppingCart, ChevronRight, UtensilsCrossed, Clock, Package, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import Layout from '../components/layout';
 import { useRouter } from 'next/navigation';
+import Layout from '../components/layout';
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState('ongoing');
   const [orders, setOrders] = useState({
     ongoing: [], history: []
   });
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchOrders = async () => {
-        try {
-            const response  = await fetch('/api/user/history');
-            if(!response){
-                throw new Error('An error occurred while fetching orders');
-            }
-            const data = await response.json();
-            const ongoingOrders = data;
-            const historyOrders = data;
-            setOrders({ ongoing: ongoingOrders, history: historyOrders });
-        } catch (error) {
-            console.error('Error fetching orders:', error);
+      setLoading(true);
+      try {
+        const response = await fetch('/api/user/history');
+        if (!response.ok) {
+          throw new Error('An error occurred while fetching orders');
         }
+        const data = await response.json();
+        const ongoingOrders = data.filter(order => order.isActive !== false);
+        const historyOrders = data.filter(order => order.isActive === false);
+        setOrders({ ongoing: ongoingOrders, history: historyOrders });
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchOrders();
@@ -35,16 +40,14 @@ export default function OrdersPage() {
   const handleCancel = (orderId) => {
     setOrders(prevOrders => ({
       ...prevOrders,
-      ongoing: prevOrders.ongoing.filter(order => order.id !== orderId)
+      ongoing: prevOrders.ongoing.filter(order => order._id !== orderId)
     }));
   };
 
   const handleViewDetails = (order) => {
-    console.log(`Tracking order ${order._id}`);
-
-    if(order && order._id){
+    if (order && order._id) {
       router.push(`history/orderDetails/${order._id}`);
-    }else{
+    } else {
       console.error('Order not found', order);
     }
   };
@@ -64,12 +67,12 @@ export default function OrdersPage() {
             <div>
               <h3 className="font-semibold text-lg text-red-800">{order.restaurantName}</h3>
               <p className="text-red-500 text-sm">
-                #{order.orderId} | {order.items.length} Items
+                #{order._id.slice(0, 6)} | {order.items.length} Items
               </p>
               {isHistory && (
                 <p className="text-orange-500 text-xs">
                   <Clock className="inline-block w-3 h-3 mr-1" />
-                  {order.orderDate}
+                  {new Date(order.orderDate).toLocaleDateString()}
                 </p>
               )}
             </div>
@@ -96,7 +99,7 @@ export default function OrdersPage() {
           {isHistory && (
             <button
               onClick={() => handleViewDetails(order)}
-              className="w-full bg-red-600 text-white py-2 rounded-md font-semibold transition-colors hover:bg-gray-200"
+              className="w-full bg-red-600 text-white py-2 rounded-md font-semibold transition-colors hover:bg-red-700"
             >
               View Details
             </button>
@@ -106,12 +109,55 @@ export default function OrdersPage() {
     </AnimatePresence>
   );
 
+  const renderEmptyState = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex flex-col items-center justify-center h-64 bg-gray-100 rounded-lg"
+    >
+      <motion.div
+        animate={{
+          rotate: [0, 10, -10, 10, 0],
+          transition: { duration: 1.5, repeat: Infinity }
+        }}
+      >
+        <UtensilsCrossed className="w-16 h-16 text-red-800 mb-4" />
+      </motion.div>
+      <h3 className="text-xl font-semibold text-gray-700 mb-2">No orders yet</h3>
+      <p className="text-gray-500 text-center mb-4">Your order history will appear here once you place an order.</p>
+      <Link href="/home">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-red-800 text-white py-2 px-4 rounded-md font-semibold transition-colors hover:bg-red-700"
+        >
+          Start Ordering
+        </motion.button>
+      </Link>
+    </motion.div>
+  );
+
+  const renderLoadingState = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center justify-center h-64"
+    >
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      >
+        <Loader2 className="w-12 h-12 text-red-800" />
+      </motion.div>
+      <p className="mt-4 text-lg text-gray-600">Loading your orders...</p>
+    </motion.div>
+  );
+
   return (
-    
     <Layout>
-      {/* Main Content */}
       <main className="flex-grow p-4">
-        {/* Tabs */}
         <div className="flex mb-6">
           <button
             className={`flex-1 py-2 text-center font-semibold ${
@@ -135,10 +181,18 @@ export default function OrdersPage() {
           </button>
         </div>
 
-        {/* Orders */}
-        {activeTab === 'ongoing' ? renderOrders(orders.ongoing) : renderOrders(orders.history, true)}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            renderLoadingState()
+          ) : (
+            activeTab === 'ongoing' ? (
+              orders.ongoing.length > 0 ? renderOrders(orders.ongoing) : renderEmptyState()
+            ) : (
+              orders.history.length > 0 ? renderOrders(orders.history, true) : renderEmptyState()
+            )
+          )}
+        </AnimatePresence>
       </main>
-
     </Layout>
   );
 }

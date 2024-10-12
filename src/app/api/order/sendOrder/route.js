@@ -11,7 +11,7 @@ export async function POST(request) {
         await connectToDatabase();
 
         const body = await request.json();
-        const {cart, orderType} = body;
+        const {cart, orderType, arrivalTime} = body;
         
         if(!cart){
             return NextResponse.json({ message: "Cart is empty" }, { status: 400 });
@@ -61,16 +61,26 @@ export async function POST(request) {
             };
         });
 
-        console.log('Items: ', orderItems);
-
         const order = new Order({
             customerId: userId,
             restaurantId: restaurantId,
             items: orderItems,
             totalAmount: totalAmount,
             orderType: orderType,
-            arrivalTime: new Date(Date.now() + 60 * 60 * 1000) // 10 minutes from now
+            arrivalTime: arrivalTime, // 10 minutes from now
+            isActive: true
         });
+
+        console.log('Order to be saved:', {
+            customerId: userId,
+            restaurantId: restaurantId,
+            items: orderItems,
+            totalAmount: totalAmount,
+            orderType: orderType,
+            arrivalTime: new Date(arrivalTime),
+            isActive: true
+        });
+
 
         await order.save();
 
