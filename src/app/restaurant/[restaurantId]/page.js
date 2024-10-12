@@ -115,7 +115,7 @@ export default function Component({params}) {
             transition={{ type: "spring", damping: 25, stiffness: 500 }}
             className="fixed inset-0 bg-white z-50 overflow-y-auto"
           >
-            <div className="sticky top-0 bg-white shadow-md p-4 flex justify-between items-center">
+            <div className="sticky top-0 bg-white z-10 shadow-md p-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-black">Menu</h2>
               <button onClick={() => setShowMenu(false)} className="p-2">
                 <X className="w-6 h-6 text-black" />
@@ -128,7 +128,7 @@ export default function Component({params}) {
               onRemove={handleRemoveFromCart}
             />
             {totalItems > 0 && (
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white shadow-lg">
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-white shadow-lg">
                 <CheckoutButton totalItems={totalItems} totalPrice={totalPrice} />
               </div>
             )}

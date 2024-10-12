@@ -1,47 +1,22 @@
-"use client";
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, MapPin, Phone, Mail, Edit2, ChevronRight, ArrowLeft } from 'lucide-react';
-import Image from 'next/image';
+"use client"
 
-const Header = ({ profilePic }) => (
-  <header className="bg-white shadow-md p-4 flex items-center justify-between">
-    <div className="flex items-center">
-      <ArrowLeft className="w-6 h-6 text-gray-600 mr-4" />
-      <motion.div 
-        whileHover={{ rotate: 360 }}
-        transition={{ duration: 0.5 }}
-        className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mr-2"
-      >
-        <span className="text-white text-xl font-bold">P</span>
-      </motion.div>
-      <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
-        PREPERLY
-      </h1>
-    </div>
-    <motion.div 
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500"
-    >
-        <Image
-      src={profilePic}
-      alt="User Profile"
-      width={50}
-      height={50}
-      className="object-cover"
-    />
-      {/* <img src={profilePic} alt="User Profile" className="w-full h-full object-cover" /> */}
-    </motion.div>
-  </header>
-);
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { User, Phone, Mail, LogOut } from 'lucide-react'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from '@/hooks/use-toast'
+import Layout from '@/app/components/layout'
 
-const ProfilePicture = ({ src }) => (
+const ProfilePicture = ({src}) => (
   <motion.div 
     className="relative w-32 h-32 mx-auto mt-6 mb-4"
     whileHover={{ scale: 1.05 }}
   >
-    {/* <img src={src} alt="Profile" className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg" /> */}
     <Image
       src={src}
       alt="Profile"
@@ -49,14 +24,8 @@ const ProfilePicture = ({ src }) => (
       height={128}
       className="rounded-full object-cover border-4 border-white shadow-lg"
     />
-    <motion.button
-      whileTap={{ scale: 0.9 }}
-      className="absolute bottom-0 right-0 bg-orange-500 text-white p-2 rounded-full shadow-md"
-    >
-      <Edit2 className="w-4 h-4" />
-    </motion.button>
   </motion.div>
-);
+)
 
 const InfoSection = ({ title, children }) => (
   <motion.section 
@@ -65,85 +34,201 @@ const InfoSection = ({ title, children }) => (
     transition={{ duration: 0.5 }}
     className="bg-white rounded-lg shadow-md p-6 mb-4"
   >
-    <h2 className="text-lg font-semibold mb-4">{title}</h2>
+    <h2 className="text-lg font-semibold mb-4 text-black">{title}</h2>
     {children}
   </motion.section>
-);
+)
 
-const InfoItem = ({ icon: Icon, label, value }) => (
+const InfoItem = ({ icon: Icon, label, name, value, onChange, error }) => (
   <div className="flex items-center mb-3 last:mb-0">
-    <Icon className="w-5 h-5 text-orange-500 mr-3" />
-    <div>
-      <p className="text-sm text-orange-500">{label}</p>
-      <p className="font-medium">{value}</p>
+    <Icon className="w-5 h-5 text-red-500 mr-3" />
+    <div className="flex-grow">
+      <Label htmlFor={name} className="text-sm text-gray-500">{label}</Label>
+      <Input
+        type= {label === 'Phone number' ? 'number' : 'text'}
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={`mt-1 text-red-500 font-medium ${error ? 'border-red-500' : ''}`}
+      />
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   </div>
-);
+)
 
-const ToggleSwitch = ({ isOn, onToggle }) => (
-  <motion.button
-    className={`w-12 h-6 flex items-center rounded-full p-1 ${
-      isOn ? 'bg-green-500' : 'bg-gray-300'
-    }`}
-    onClick={onToggle}
-  >
-    <motion.div
-      className="bg-white w-4 h-4 rounded-full shadow-md"
-      layout
-      transition={{ type: "spring", stiffness: 700, damping: 30 }}
-      animate={{ x: isOn ? 24 : 0 }}
-    />
-  </motion.button>
-);
+export default function EditProfile() {
+  const [profilePic, setProfilePic] = useState(null)
+  const [userData, setUserData] = useState({
+    fullName: '',
+    username: '',
+    mobileNumber: '',
+    email: ''
+  })
+  const [errors, setErrors] = useState({
+    fullName: '',
+    username: '',
+    mobileNumber: '',
+    email: ''
+  })
+  const router = useRouter()
+  const { toast } = useToast()
 
-const EditButton = () => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-semibold text-lg shadow-md"
-  >
-    Edit Profile
-  </motion.button>
-);
+  useEffect(() => {
+    const getProfileUrl = () => {
+      const storedProfilePic = localStorage.getItem('profilePic')
+      const storedTimestamp = localStorage.getItem('profilePicTimestamp')
+      const now = new Date().getTime()
 
-export default function Component({params}) {
-  const [isMember, setIsMember] = useState(true);
+      if (storedProfilePic && storedTimestamp) {
+        const oneDay = 24 * 60 * 60 * 1000
+        if (now - parseInt(storedTimestamp) < oneDay) {
+          return storedProfilePic
+        }
+      }
 
-  const userData = {
-    name: "JANAKI",
-    occupation: "Student",
-    address: "NITW, Hanamakonda",
-    phone: "+977 9840103828",
-    email: "bibhushansaakha@gmail.com",
-    profilePic: "https://www.svgrepo.com/show/106359/avatar.svg"
-  };
+      return '/placeholder.svg?height=128&width=128'
+    }
+
+    setProfilePic(getProfileUrl())
+
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get('/api/user/getUser', { withCredentials: true })
+        if (response.status === 200) {
+          setUserData(response.data)
+        } else {
+          toast({
+            title: "Error",
+            description: "An error occurred while fetching user data.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error('An error occurred while fetching user data:', error)
+        toast({
+          title: "Error",
+          description: "An error occurred while fetching user data.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    fetchUserData()
+  }, [toast])
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setUserData(prev => ({ ...prev, [name]: value }))
+    
+    // Validate the input
+    let error = ''
+    switch (name) {
+      case 'username':
+        if (value.includes(' ')) {
+          error = 'Username should not contain spaces'
+        } else if (value.length < 3) {
+          error = 'Username should be at least 3 characters long'
+        }
+        break
+      case 'mobileNumber':
+        if (!/^\d{10}$/.test(value)) {
+          error = 'Phone number should be exactly 10 digits'
+        }
+        break
+      case 'email':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Please enter a valid email address'
+        }
+        break
+    }
+    setErrors(prev => ({ ...prev, [name]: error }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    // Check if there are any errors
+    if (Object.values(errors).some(error => error !== '')) {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the errors before submitting.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await axios.put('/api/user/updateUser', userData, { withCredentials: true })
+      if (response.status === 200) {
+        toast({
+          title: "Success",
+          description: "Profile updated successfully.",
+        })
+        router.push('/profile')
+      }
+    } catch (error) {
+      console.error('An error occurred while updating user data:', error)
+      toast({
+        title: "Error",
+        description: "An error occurred while updating your profile.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post('/api/user/logout', {}, { withCredentials: true })
+      if (response.status === 200) {
+        localStorage.removeItem('profilePic')
+        localStorage.removeItem('profilePicTimestamp')
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error('An error occurred while logging out:', error)
+      toast({
+        title: "Error",
+        description: "An error occurred while logging out.",
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
+    <Layout>
     <div className="bg-gray-100 min-h-screen pb-8">
-      <Header profilePic={userData.profilePic} />
       <main className="max-w-lg mx-auto px-4">
-        <ProfilePicture src={userData.profilePic} />
-        <InfoSection title="Personal Info">
-          <InfoItem icon={User} label="Your name" value={userData.name} />
-          <InfoItem icon={User} label="Occupation" value={userData.occupation} />
-          <InfoItem icon={MapPin} label="Address" value={userData.address} />
-          <div className="flex items-center justify-between mt-4">
-            <span className="font-medium">Member</span>
-            <ToggleSwitch isOn={isMember} onToggle={() => setIsMember(!isMember)} />
-          </div>
-        </InfoSection>
-        <InfoSection title="Contact Info">
-          <InfoItem icon={Phone} label="Phone number" value={userData.phone} />
-          <InfoItem icon={Mail} label="Email" value={userData.email} />
-        </InfoSection>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <EditButton />
-        </motion.div>
+        {profilePic && <ProfilePicture src={profilePic} />}
+        <form onSubmit={handleSubmit}>
+          <InfoSection title="Personal Info">
+            <InfoItem icon={User} label="Your name" name="fullName" value={userData.fullName} onChange={handleInputChange} error={errors.fullName} />
+            <InfoItem icon={User} label="Username" name="username" value={userData.username} onChange={handleInputChange} error={errors.username} />
+          </InfoSection>
+          <InfoSection title="Contact Info">
+            <InfoItem icon={Phone} label="Phone number" name="mobileNumber" value={userData.mobileNumber} onChange={handleInputChange} error={errors.mobileNumber} />
+            <InfoItem icon={Mail} label="Email" name="email" value={userData.email} onChange={handleInputChange} error={errors.email} />
+          </InfoSection>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="space-y-4"
+          >
+            <Button type="submit" className="w-full bg-red-500 hover:bg-red-600 text-white">
+              Save Changes
+            </Button>
+            <Button type="button" variant="outline" className="w-full border-red-200 text-red-500" onClick={() => router.push('/profile')}>
+              Cancel
+            </Button>
+            <Button type="button" variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-50" onClick={handleLogout}>
+              <LogOut className="w-5 h-5 mr-2" />
+              Log Out
+            </Button>
+          </motion.div>
+        </form>
       </main>
     </div>
-  );
+    </Layout>
+  )
 }

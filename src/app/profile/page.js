@@ -7,7 +7,6 @@ import profileUrls from './profilePictures';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import CreativeProfileLoading from './loading';
-import Link from 'next/link';
 import Layout from '../components/layout';
 
 const ProfilePicture = ({ src }) => (
@@ -47,8 +46,9 @@ const InfoItem = ({ icon: Icon, label, value }) => (
   </div>
 );
 
-const EditButton = () => (
+const EditButton = ({onclick}) => (
   <motion.button
+    onClick={onclick}
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold text-lg shadow-md"
@@ -149,8 +149,8 @@ export default function Component({params}) {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen pb-8">
       <Layout>
+    <div className="bg-gray-100 min-h-screen pb-8">
       <main className="max-w-lg mx-auto px-4">
         <ProfilePicture src={profilePic} />
         <InfoSection title="Personal Info">
@@ -166,11 +166,11 @@ export default function Component({params}) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <EditButton />
+          <EditButton onclick={() => router.push(`/profile/${datauser._id}`)} />
           <LogoutButton onClick={handleLogout} />
         </motion.div>
       </main>
-      </Layout>
     </div>
+      </Layout>
   );
 }
