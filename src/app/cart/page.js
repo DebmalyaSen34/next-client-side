@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, X, Clock, ChevronUp, ChevronDown } from 'lucide-react';
+import { Minus, Plus, X, Clock, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import Layout from '../components/layout';
 import { useRouter } from 'next/navigation';
 
-export default function CartPage() {
+export default function Component() {
   const { cart, addCart, removeCart, getTotalPrice } = useCart();
   const [activeTab] = useState('cart');
   const [isDineIn, setIsDineIn] = useState(true);
@@ -17,6 +17,7 @@ export default function CartPage() {
   const [seconds, setSeconds] = useState(0);
   const [period, setPeriod] = useState('PM');
   const [currentTime, setCurrentTime] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const totalPrice = getTotalPrice();
@@ -43,6 +44,7 @@ export default function CartPage() {
   };
 
   const handleConfirmOrder = async () => {
+    setIsLoading(true);
     const arrivalTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${period}`;
 
     const [time, modifier] = arrivalTimeString.split(' ');
@@ -58,40 +60,44 @@ export default function CartPage() {
     const now = new Date();
     const arrivalTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), stringhours, stringminutes, stringseconds);
 
-    const response = await fetch('/api/order/sendOrder', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        cart, 
-        orderType: isDineIn ? 'Dine-in' : 'Take away',
-        arrivalTime 
-      }),
-    });
-
-    
-
-
-    if (response.ok) {
-      const data = await response.json();
-
-      localStorage.removeItem('cart');
-
-      const qrcodeResponse = await fetch(`/api/order/generateQrCode?orderId=${data.order._id}`, {
-        method: 'GET',
+    try {
+      const response = await fetch('/api/order/sendOrder', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({ 
+          cart, 
+          orderType: isDineIn ? 'Dine-in' : 'Take away',
+          arrivalTime 
+        }),
       });
-      
-      if(qrcodeResponse.ok){
-        router.push(`/cart/orderSuccessful?orderId=${data.order._id}`);
-      }else{
-        console.error('Failed to generate QR code');
+
+      if (response.ok) {
+        const data = await response.json();
+
+        localStorage.removeItem('cart');
+
+        const qrcodeResponse = await fetch(`/api/order/generateQrCode?orderId=${data.order._id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if(qrcodeResponse.ok){
+          router.push(`/cart/orderSuccessful/${data.order._id}`);
+        } else {
+          console.error('Failed to generate QR code');
+        }
+      } else {
+        console.error('Failed to place order! Please try again');
       }
-    } else {
-      console.error('Failed to place order! Please try again');
+    } catch (error) {
+      console.error('Error placing order:', error);
+    } finally {
+      setIsLoading(false);
+      setShowArrivalModal(false);
     }
   };
 
@@ -273,16 +279,25 @@ export default function CartPage() {
                     whileTap={{ scale: 0.95 }}
                     className="px-4 py-2 rounded-md border border-white text-white"
                     onClick={handleCancelTimer}
+                    disabled={isLoading}
                   >
                     Cancel
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 rounded-md bg-red-600 text-white"
+                    className="px-4 py-2 rounded-md bg-red-600 text-white flex items-center justify-center"
                     onClick={handleConfirmOrder}
+                    disabled={isLoading}
                   >
-                    Save
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Save'
+                    )}
                   </motion.button>
                 </div>
               </motion.div>

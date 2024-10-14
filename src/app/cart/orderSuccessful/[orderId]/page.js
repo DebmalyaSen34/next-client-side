@@ -9,20 +9,22 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Layout from '@/app/components/layout';
 
-function SearchParamsWrapper() {
-  const searchParams = useSearchParams();
-  return <OrderSuccessContent orderId={searchParams.get('orderId')} />;
-}
+// function SearchParamsWrapper() {
+//   const searchParams = useSearchParams();
+//   return <OrderSuccessContent orderId={searchParams.get('orderId')} />;
+// }
 
-export default function OrderSuccessPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SearchParamsWrapper />
-    </Suspense>
-  );
-}
+// export default function OrderSuccessPage() {
+//   return (
+//     <Suspense fallback={<div>Loading...</div>}>
+//       <SearchParamsWrapper />
+//     </Suspense>
+//   );
+// }
 
-function OrderSuccessContent({ orderId }) {
+export default function OrderSuccessContent({ params }) {
+  const {orderId} = params;
+  console.log("OrderID: ", orderId);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
