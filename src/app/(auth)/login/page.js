@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Utensils, Eye, EyeOff, ChevronRight, AlertCircle } from "lucide-react";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import LoadingScreen from '../components/LoadingScreen';
+import LoadingScreen from '../../components/LoadingScreen';
 import Image from 'next/image';
 
 const FloatingPlate = ({ delay }) => (
@@ -41,7 +41,7 @@ export default function PreperlyLogin() {
     setLoginError('');
     
     try {
-      const response = await axios.post('/api/user/login', { mobileNumber, password}, {withCredentials: true});
+      const response = await axios.post('/api/auth/login', { mobileNumber, password}, {withCredentials: true});
       console.log(response.data);
       router.push('/home');
     } catch (error) {

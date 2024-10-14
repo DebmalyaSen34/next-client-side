@@ -132,7 +132,7 @@ export default function Component({params}) {
 
   const handleLogout = async () => {
     try{
-      const response = await axios.post('/api/user/logout', {}, {withCredentials: true});
+      const response = await axios.post('/api/auth/logout', {}, {withCredentials: true});
 
       if(response.status === 200){
         localStorage.removeItem('profilePic');
