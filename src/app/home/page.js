@@ -1,15 +1,12 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, User, Home, Search, ShoppingCart, ChevronDown, Heart } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import Layout from '../components/layout';
 import Image from 'next/image';
 
-//TODO: Add redirect link to profile, search and other
-
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('home');
   const [restaurants, setRestaurant] = useState([]);
 
   React.useEffect(() => {
