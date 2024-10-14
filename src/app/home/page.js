@@ -1,24 +1,30 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
 import Layout from '../components/layout';
 import Image from 'next/image';
+import NoRestaurantsFound from '@/components/loaders/noRestaurantsFound';
+import LoadingRestaurants from '@/components/loaders/loadingRestaurants';
 
 export default function HomePage() {
-  const [restaurants, setRestaurant] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchRestaurants() {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/vendor/restaurant');
         if (response.ok) {
           const data = await response.json();
-          setRestaurant(data);
+          setRestaurants(data);
         }
       } catch (err) {
         console.error('Failure fetching restaurants from database!', err);
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchRestaurants();
@@ -57,35 +63,40 @@ export default function HomePage() {
         {/* Restaurants Section */}
         <section className="p-4">
           <h3 className="text-lg font-semibold mb-2 text-orange-800">Restaurants</h3>
-          <motion.div layout className="space-y-4">
-            {restaurants.map((restaurant) => (
-              <Link key={restaurant._id} href={`/restaurant/${restaurant._id}`}>
-                <motion.div
-                  key={restaurant._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 2 * 0.1 }}
-                  className="bg-white rounded-lg shadow-md p-4 flex items-center space-x-4"
-                >
-                  <Image
-                    src={'https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg'}
-                    alt={restaurant.restaurantName}
-                    className="rounded-lg object-cover"
-                    width={120}
-                    height={120}
-                  />
-                  <div>
-                    <h4 className="font-semibold text-orange-800">{restaurant.restaurantName}</h4>
-                    <p className="text-sm text-gray-600">{restaurant.address}</p>
-                    <div className="flex items-center mt-1">
-                      <span className="text-yellow-500 mr-1">★</span>
-                      <span className="text-orange-600">{restaurant.rating}</span>
+          {isLoading ? (
+            <LoadingRestaurants />
+          ) : restaurants.length > 0 ? (
+            <motion.div layout className="space-y-4">
+              {restaurants.map((restaurant) => (
+                <Link key={restaurant._id} href={`/restaurant/${restaurant._id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white rounded-lg shadow-md p-4 flex items-center space-x-4"
+                  >
+                    <Image
+                      src={'https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg'}
+                      alt={restaurant.restaurantName}
+                      className="rounded-lg object-cover"
+                      width={120}
+                      height={120}
+                    />
+                    <div>
+                      <h4 className="font-semibold text-orange-800">{restaurant.restaurantName}</h4>
+                      <p className="text-sm text-gray-600">{restaurant.address}</p>
+                      <div className="flex items-center mt-1">
+                        <span className="text-yellow-500 mr-1">★</span>
+                        <span className="text-orange-600">{restaurant.rating}</span>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
                 </Link>
-            ))}
-              </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <NoRestaurantsFound />
+          )}
         </section>
       </main>
     </Layout>

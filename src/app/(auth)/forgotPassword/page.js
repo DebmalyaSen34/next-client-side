@@ -141,19 +141,11 @@ export default function ForgotPassword() {
       >
         <div className="flex justify-center mb-8">
           <motion.div
-            animate={{
-              rotate: [0, 360],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "linear",
-            }}
             className="relative"
           >
             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
               <Image
-                src="/images/preperlysvglogo.svg"
+                src="/images/preperlyLogo.svg"
                 alt="Preperly Logo"
                 width={100}
                 height={100}

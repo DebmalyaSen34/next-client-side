@@ -91,7 +91,7 @@ export default function PreperlyLogin() {
     }
     const userData = { email, password, username, mobileNumber, fullName };
     try {
-      const response = await fetch('/api/user/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
