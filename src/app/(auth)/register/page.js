@@ -99,7 +99,8 @@ export default function PreperlyLogin() {
         body: JSON.stringify(userData),
       });
       const data = await response.json();
-      if (response.ok) {
+      console.log(response);
+      if (response.status === 200) {
         console.log('Registration successful:', data);
 
         const otpResponse = await fetch('/api/otp/sendOtp', {
@@ -117,7 +118,17 @@ export default function PreperlyLogin() {
           console.error('Failed to send OTP:', otpData.error);
         }
       } else {
-        console.error('Registration failed:', data.error);
+        if (response.status === 409) {
+          console.log("Error: ", data.error);
+          if (data.error.includes('username')) {
+            setErrors(prev => ({ ...prev, username: 'Username already exists' }));
+          }
+          if (data.error.includes('mobile')) {
+            setErrors(prev => ({ ...prev, mobileNumber: 'Mobile number already exists' }));
+          }
+        } else {
+          console.error('Registration failed:', data.error);
+        }
       }
     } catch (error) {
       console.error('An Error occurred:', error);
@@ -194,7 +205,7 @@ export default function PreperlyLogin() {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <Input
