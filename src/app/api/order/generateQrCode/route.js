@@ -18,7 +18,7 @@ export async function GET(request) {
         const url = new URL(request.url);
         const orderId = url.searchParams.get('orderId');
 
-        console.log('Order ID: ', orderId);
+        // console.log('Order ID: ', orderId);
 
         if(!orderId){
             return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 });
@@ -30,7 +30,7 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Failed to generate QR code' }, { status: 500 });
         }
 
-        console.log('qrcode: ', qrCodeDataURL);
+        // console.log('qrcode: ', qrCodeDataURL);
 
 
         await connectToDatabase();
@@ -39,7 +39,7 @@ export async function GET(request) {
             qrcode: qrCodeDataURL
         }, {new: true});
 
-        console.log(order);
+        // console.log(order);
 
 
         return NextResponse.json({ message: 'QR code successfully generate!'}, {status: 200});

@@ -5,7 +5,8 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Clock, MapPin, Phone, Truck } from 'lucide-react'
 import Link from 'next/link'
 import Layout from '@/app/components/layout'
-import { formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils';
+import Image from 'next/image';
 
 export default function OrderDetailPage({ params }) {
   const { orderId } = params
@@ -103,8 +104,8 @@ export default function OrderDetailPage({ params }) {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Orders
           </Link>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-lg shadow-lg overflow-hidden"
@@ -113,7 +114,7 @@ export default function OrderDetailPage({ params }) {
               <h1 className="text-2xl font-bold mb-2">{order.restaurantId.restaurantName}</h1>
               <p className="text-white">Order #{order._id.slice(0, 6)}</p>
             </div>
-            
+
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center text-gray-600">
@@ -124,11 +125,11 @@ export default function OrderDetailPage({ params }) {
                   {order.isActive ? 'Active' : 'Completed'}
                 </div>
               </div>
-              
+
               <h2 className="text-xl font-semibold mb-4 text-red-800">Order Items</h2>
               <ul className="divide-y divide-gray-200">
                 {order.items.map((item, index) => (
-                  <motion.li 
+                  <motion.li
                     key={index}
                     variants={itemAnimation}
                     initial="hidden"
@@ -144,7 +145,7 @@ export default function OrderDetailPage({ params }) {
                   </motion.li>
                 ))}
               </ul>
-              
+
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-red-700">Total Amount</span>
@@ -152,31 +153,28 @@ export default function OrderDetailPage({ params }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 p-6">
-              <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>
+              <h2 className="text-xl font-semibold mb-4 text-red-800">Delivery Information</h2>
               <div className="space-y-4">
-                <div className="flex items-start">
-                  <Truck className="w-5 h-5 mr-3 text-red-800 mt-1" />
-                  <div>
-                    <p className="font-medium">Estimated Delivery Time</p>
-                    <p className="text-gray-600">{order.estimatedDelivery}</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <MapPin className="w-5 h-5 mr-3 text-red-800 mt-1" />
-                  <div>
-                    <p className="font-medium">Delivery Address</p>
-                    <p className="text-gray-600">{order.deliveryAddress}</p>
-                  </div>
-                </div>
                 <div className="flex items-start">
                   <Phone className="w-5 h-5 mr-3 text-red-800 mt-1" />
                   <div>
-                    <p className="font-medium">Restaurant Phone</p>
-                    <p className="text-gray-600">{order.restaurantPhone}</p>
+                    <p className="font-medium text-red-800">Restaurant Phone</p>
+                    <p className="text-red-600">{7989067758}</p>
                   </div>
                 </div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.5 }}
+                    className="mb-6"
+                  >
+                    <h2 className="text-lg font-semibold text-red-800 mb-2">Your Order QR Code:</h2>
+                    <div className="flex justify-center">
+                      <Image src={order.qrcode} alt="Order QR Code" width={200} height={200} />
+                    </div>
+                  </motion.div>
               </div>
             </div>
           </motion.div>
