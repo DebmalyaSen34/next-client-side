@@ -31,7 +31,7 @@
     "iron-session": "^8.0.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.447.0",
-    "mongoose": "^8.7.0",
+    "mongoose": "^8.8.3",
     "next": "^14.2.14",
     "otp-generator": "^4.0.1",
     "qrcode": "^1.5.4",
