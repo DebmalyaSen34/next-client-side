@@ -27,6 +27,7 @@
     "class-variance-authority": "^0.7.0",
     "client": "file:",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
     "framer-motion": "^11.11.1",
     "iron-session": "^8.0.3",
     "jsonwebtoken": "^9.0.2",
