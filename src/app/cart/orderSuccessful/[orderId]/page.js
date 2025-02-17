@@ -10,11 +10,12 @@ import Image from 'next/image';
 import Layout from '@/app/components/layout';
 
 export default function OrderSuccessContent({ params }) {
-  const {orderId} = params;
+  const { orderId } = params;
   console.log("OrderID: ", orderId);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     const getOrderDetails = async () => {
@@ -25,12 +26,15 @@ export default function OrderSuccessContent({ params }) {
       }
 
       try {
-        const orderResponse = await fetch(`/api/user/history/${orderId}`);
-        if (!orderResponse.ok) {
-          throw new Error('Failed to fetch order details');
+        const orderDataString = localStorage.getItem(`orderData-${orderId}`);
+        if (orderDataString) {
+          const data = JSON.parse(orderDataString);
+          console.log("Data: ", data);
+          setOrderDetails(data);
+          setItems(data.items);
+        } else {
+          setError('No order details found in local storage');
         }
-        const data = await orderResponse.json();
-        setOrderDetails(data);
       } catch (error) {
         console.error('Error fetching order details:', error);
         setError('Failed to load order details');
@@ -48,6 +52,11 @@ export default function OrderSuccessContent({ params }) {
       origin: { y: 0.6 }
     });
   }, [orderId]);
+
+  useEffect(() => {
+    console.log("Order Details: ", orderDetails);
+    console.log("Items: ", items);
+  }, [orderDetails, items]);
 
   if (loading) {
     return (
@@ -108,7 +117,7 @@ export default function OrderSuccessContent({ params }) {
             transition={{ delay: 0.9 }}
             className="text-lg text-gray-600 mb-6"
           >
-            Thank you for your order at {orderDetails.restaurantId.restaurantName}. Your order number is:
+            Thank you for your order. Your order number is:
           </motion.p>
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
@@ -116,7 +125,7 @@ export default function OrderSuccessContent({ params }) {
             transition={{ delay: 1.1, type: "spring", stiffness: 260, damping: 20 }}
             className="bg-orange-100 rounded-lg p-4 mb-6"
           >
-            <span className="text-2xl font-bold text-orange-800">{orderDetails._id.slice(0, 6)}</span>
+            <span className="text-2xl font-bold text-orange-800">{orderDetails.orderId.slice(0, 6)}</span>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -126,12 +135,15 @@ export default function OrderSuccessContent({ params }) {
           >
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Order Summary:</h2>
             <ul className="space-y-2">
-              {orderDetails.items.map((item, index) => (
-                <li key={index} className="flex justify-between text-gray-600">
-                  <span>{item.dishName} x{item.quantity}</span>
-                  <span>₹{item.price * item.quantity}</span>
-                </li>
-              ))}
+              {Array.isArray(orderDetails.items) ?
+                (orderDetails.items.map((item, index) => (
+                  <li key={index} className="flex justify-between text-gray-600">
+                    <span>{item.name} x{item.quantity}</span>
+                    <span>₹{item.price * item.quantity}</span>
+                  </li>
+                ))) : (
+                  <li>No items in order</li>
+                )}
             </ul>
             <div className="mt-4 pt-2 border-t border-gray-200 flex justify-between items-center">
               <span className="font-semibold text-gray-800">Total:</span>
@@ -146,7 +158,7 @@ export default function OrderSuccessContent({ params }) {
           >
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Your Order QR Code:</h2>
             <div className="flex justify-center">
-              <Image src={orderDetails.qrcode} alt="Order QR Code" width={200} height={200} />
+              <Image src={orderDetails.qr} alt="Order QR Code" width={200} height={200} />
             </div>
           </motion.div>
           <motion.div

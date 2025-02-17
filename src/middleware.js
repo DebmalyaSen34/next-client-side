@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 
 export async function middleware(request) {
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get('authToken')?.value;
 
     const protectedRoutes = ['/profile', 'restaurant', '/home'];
 

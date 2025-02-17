@@ -1,9 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {Utensils, X, ShoppingCart } from 'lucide-react';
+import { Utensils, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
-import axios from 'axios';
 import Header from '@/app/components/restaurantPage/Header';
 import RestaurantImage from '@/app/components/restaurantPage/RestaurantImage';
 import RestaurantInfo from '@/app/components/restaurantPage/RestaurantInfo';
@@ -11,6 +10,7 @@ import MenuItem from '@/app/components/restaurantPage/MenuItem';
 import Facilities from '@/app/components/restaurantPage/Facilities';
 import QuickActions from '@/app/components/restaurantPage/QuickActions';
 import Description from '@/app/components/restaurantPage/Description';
+import PhotoSlider from '@/app/components/restaurantPage/PhotoSlider';
 import Link from 'next/link';
 
 
@@ -19,9 +19,9 @@ const Menu = ({ items, cart, onAdd, onRemove }) => {
     <div className="p-4">
       {items.map((item) => (
         <MenuItem
-          key={item._id}
+          key={item.id}
           item={item}
-          quantity={cart[item.dishName]?.quantity || 0}
+          quantity={cart[item.name]?.quantity || 0}
           onAdd={onAdd}
           onRemove={onRemove}
         />
@@ -43,17 +43,17 @@ const ShowMenuButton = ({ onClick }) => (
 
 const CheckoutButton = ({ totalItems, totalPrice }) => (
   <Link href="/cart">
-  <motion.button
-    whileTap={{ scale: 0.95 }}
-    className="bg-green-500 text-white py-4 px-6 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center w-full"
-  >
-    <ShoppingCart className="w-5 h-5 mr-2" />
-    Checkout ({totalItems}) - ₹{totalPrice}
-  </motion.button>
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      className="bg-green-500 text-white py-4 px-6 rounded-full font-semibold text-lg shadow-lg flex items-center justify-center w-full"
+    >
+      <ShoppingCart className="w-5 h-5 mr-2" />
+      Checkout ({totalItems}) - ₹{totalPrice}
+    </motion.button>
   </Link>
 );
 
-export default function Component({params}) {
+export default function Component({ params }) {
   const { cart,
     addCart,
     removeCart,
@@ -64,17 +64,53 @@ export default function Component({params}) {
   const [menuForItems, setMenuForItems] = useState([]);
   const [showMenu, setShowMenu] = useState(false);
   const [restaurantData, setRestaurantData] = useState({});
+  const [images, setImages] = useState([]);
 
   console.log(params.restaurantId);
 
   useEffect(() => {
     const fetchingRestaurantData = async () => {
-      try{
-        const response = await axios.get(`/api/vendor/restaurant?restaurantId=${params.restaurantId}`);
-        setRestaurantData(response.data._doc);
-        console.log('menu Data: ', response.data.menu);
-        setMenuForItems(response.data.menu);
-      }catch(error){
+      const localStorageKey = `restaurantData-${params.restaurantId}`;
+
+      try {
+        const storedData = localStorage.getItem(localStorageKey);
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setRestaurantData(parsedData.restaurantData);
+          setMenuForItems(parsedData.menuForItems);
+          setImages(parsedData.images);
+          console.log("Data loaded from the local storage!");
+          return;
+        }
+
+        const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/getRestaurant?restaurantId=${params.restaurantId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setRestaurantData(data.data.restaurant);
+        console.log('menu Data: ', data.data.menu);
+        setMenuForItems(data.data.menu);
+        setImages(data.data.images[0]);
+
+        if (!data.data.images[0].imageurls || data.data.images[0].imageurls.length === 0) {
+          console.warn('No image URLs found');
+        }
+
+        localStorage.setItem(localStorageKey, JSON.stringify({
+          restaurantData: data.data.restaurant,
+          menuForItems: data.data.menu,
+          images: data.data.images[0]
+        }));
+
+        console.log('Data saved to the local storage!');
+
+      } catch (error) {
         console.error('Error fetching restaurant data', error);
       }
     };
@@ -88,21 +124,27 @@ export default function Component({params}) {
   const handleRemoveFromCart = (item) => {
     removeCart(item);
   };
-  
+
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
 
   return (
     <div className="bg-gray-100 min-h-screen pb-28">
-      <Header name={restaurantData.restaurantName} onBack={() => console.log('Go back')} />
+      <Header name='dummy' onBack={() => console.log('Go back')} />
       <main>
-        <RestaurantImage src={'https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg'} name={restaurantData.name} />
-        <RestaurantInfo 
-          name={restaurantData.restaurantName} 
-          rating={restaurantData.rating} 
-          distance={'1.2'}
-        />
-        <QuickActions />
+        {images && images.imageurls && images.imageurls.length > 0 ? (
+          <PhotoSlider images={images.imageurls} />
+        ) : (
+          <div>No images available</div> // Or a placeholder component
+        )}
+        <div className='p-4 bg-white shadow-md'>
+          <RestaurantInfo
+            name={restaurantData.restaurantName}
+            rating={restaurantData.rating}
+            distance={'1.2'}
+          />
+          <QuickActions />
+        </div>
         <Description text={"Experience culinary excellence at Gourmet Delights. Our chefs craft exquisite dishes using the finest ingredients, offering a perfect blend of traditional flavors and modern gastronomy. Enjoy a sophisticated ambiance perfect for both casual dining and special occasions. From our signature seafood platters to delectable pasta dishes, every meal is a celebratio"} />
         <Facilities facilities={["Outdoor Seating", "Valet Parking", "Full Bar", "Wheelchair Accessible"]} />
       </main>
@@ -121,10 +163,10 @@ export default function Component({params}) {
                 <X className="w-6 h-6 text-black" />
               </button>
             </div>
-            <Menu 
-              items={menuForItems} 
+            <Menu
+              items={menuForItems}
               cart={cart}
-              onAdd={handleAddToCart} 
+              onAdd={handleAddToCart}
               onRemove={handleRemoveFromCart}
             />
             {totalItems > 0 && (

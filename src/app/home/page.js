@@ -14,12 +14,28 @@ export default function HomePage() {
 
   useEffect(() => {
     async function fetchRestaurants() {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        const response = await fetch('/api/vendor/restaurant');
+        const cachedRestaurants = localStorage.getItem('restaurants');
+        if (cachedRestaurants) {
+          try {
+            const parsedRestaurants = JSON.parse(cachedRestaurants);
+            console.log('Fetched restaurants from cache:', parsedRestaurants);
+            setRestaurants(parsedRestaurants);
+            setIsLoading(false);
+          } catch (error) {
+            console.error('Failed to fetch restaurants from cache:', error);
+          }
+        }
+        const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/home`);
         if (response.ok) {
           const data = await response.json();
-          setRestaurants(data);
+          console.log('Fetched restaurants:', data.data);
+          setRestaurants(data.data);
+
+          localStorage.setItem('restaurants', JSON.stringify(data.data));
+        } else {
+          console.error('Failed to fetch restaurants:', response.statusText);
         }
       } catch (err) {
         console.error('Failure fetching restaurants from database!', err);
@@ -34,7 +50,7 @@ export default function HomePage() {
     <Layout>
       {/* Main Content */}
       <main className="flex-grow overflow-y-auto">
-        
+
         {/* Featured Restaurant */}
         <div className="relative">
           <img
@@ -68,7 +84,7 @@ export default function HomePage() {
           ) : restaurants.length > 0 ? (
             <motion.div layout className="space-y-4">
               {restaurants.map((restaurant) => (
-                <Link key={restaurant._id} href={`/restaurant/${restaurant._id}`}>
+                <Link key={restaurant.id} href={`/restaurant/${restaurant.id}`}>
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -76,18 +92,18 @@ export default function HomePage() {
                     className="bg-white rounded-lg shadow-md p-4 flex items-center space-x-4"
                   >
                     <Image
-                      src={'https://b.zmtcdn.com/data/pictures/9/20273339/ed7e64c33ece1ac02e9422fd1bf56cd4.jpg'}
-                      alt={restaurant.restaurantName}
+                      src={restaurant.logourl}
+                      alt={restaurant.restaurantname}
                       className="rounded-lg object-cover"
                       width={120}
                       height={120}
                     />
                     <div>
-                      <h4 className="font-semibold text-orange-800">{restaurant.restaurantName}</h4>
-                      <p className="text-sm text-gray-600">{restaurant.address}</p>
+                      <h4 className="font-semibold text-orange-800">{restaurant.restaurantname}</h4>
+                      <p className="text-sm text-gray-600">{restaurant.restaurantaddress}</p>
                       <div className="flex items-center mt-1">
                         <span className="text-yellow-500 mr-1">★</span>
-                        <span className="text-orange-600">{restaurant.rating}</span>
+                        <span className="text-orange-600">{restaurant.rating || '5'}</span>
                       </div>
                     </div>
                   </motion.div>

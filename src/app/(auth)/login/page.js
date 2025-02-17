@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Utensils, Eye, EyeOff, ChevronRight, AlertCircle } from "lucide-react";
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import LoadingScreen from '../../components/LoadingScreen';
 import Image from 'next/image';
+import { setAuthCookie } from '@/app/actions';
 
 const FloatingPlate = ({ delay }) => (
   <motion.div
@@ -39,11 +39,30 @@ export default function PreperlyLogin() {
     e.preventDefault();
     setLoading(true);
     setLoginError('');
-    
+
     try {
-      const response = await axios.post('/api/auth/login', { mobileNumber, password}, {withCredentials: true});
-      console.log(response.data);
-      router.push('/home');
+      const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/user/login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phoneNumber: mobileNumber,
+            password: password,
+          })
+        }
+      )
+
+      const data = await response.json();
+      console.log(data);
+
+      if (response.ok) {
+        await setAuthCookie(data.token);
+        router.push('/home');
+      } else {
+        setLoginError(data.message);
+      }
     } catch (error) {
       console.error(error);
       if (error.response && error.response.status === 401) {
@@ -56,8 +75,8 @@ export default function PreperlyLogin() {
     }
   };
 
-  if(loading){
-    return <LoadingScreen message = "Preparing login..." />;
+  if (loading) {
+    return <LoadingScreen message="Preparing login..." />;
   }
 
   return (
@@ -80,12 +99,12 @@ export default function PreperlyLogin() {
             }}
             className="relative w-24 h-24 bg-white-600 rounded-full flex items-center justify-center"
           >
-              <Image
-                src="/images/preperlyLogo.svg"
-                alt="Preperly Logo"
-                layout="fill"
-                objectFit="contain"
-              />
+            <Image
+              src="/images/preperlyLogo.svg"
+              alt="Preperly Logo"
+              layout="fill"
+              objectFit="contain"
+            />
           </motion.div>
         </div>
         <h2 className="text-3xl font-bold text-center text-red-800 mb-6">Welcome to Preperly</h2>

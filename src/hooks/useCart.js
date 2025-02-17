@@ -17,10 +17,10 @@ export function useCart() {
 
     const addCart = (item) => {
         const newCart = { ...cart };
-        if (newCart[item.dishName]) {
-            newCart[item.dishName].quantity += 1;
+        if (newCart[item.name]) {
+            newCart[item.name].quantity += 1;
         } else {
-            newCart[item.dishName] = { ...item, quantity: 1 };
+            newCart[item.name] = { ...item, quantity: 1 };
         }
         updateCart(newCart);
     };

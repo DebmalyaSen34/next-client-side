@@ -6,6 +6,7 @@ import { Minus, Plus, X, Clock, ChevronUp, ChevronDown, Loader2 } from 'lucide-r
 import { useCart } from '@/hooks/useCart';
 import Layout from '../components/layout';
 import { useRouter } from 'next/navigation';
+import { getUserIdFromCookie, confirmOrder } from '../actions';
 
 export default function Component() {
   const { cart, addCart, removeCart, getTotalPrice } = useCart();
@@ -18,6 +19,7 @@ export default function Component() {
   const [period, setPeriod] = useState('PM');
   const [currentTime, setCurrentTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [orderSuccessfulData, setOrderSuccessfulData] = useState(null);
   const router = useRouter();
 
   const totalPrice = getTotalPrice();
@@ -49,47 +51,74 @@ export default function Component() {
 
     const [time, modifier] = arrivalTimeString.split(' ');
     let [stringhours, stringminutes, stringseconds] = time.split(':');
-    if(stringhours === '12'){
+    if (stringhours === '12') {
       stringhours = '00';
     }
 
-    if(modifier === 'PM'){
+    if (modifier === 'PM') {
       stringhours = parseInt(stringhours, 10) + 12;
     }
 
     const now = new Date();
     const arrivalTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), stringhours, stringminutes, stringseconds);
 
+    const customerId = await getUserIdFromCookie();
+
+    console.log('Customer id: ', customerId);
+
+    console.log({
+      items: cart,
+      vendorId: cart[Object.keys(cart)[0]].vendor_id,
+      customerId: customerId,
+      orderType: isDineIn ? 'Dine-in' : 'Take away',
+      arrivalTime: arrivalTime.toISOString(),
+      orderStatus: 'pending',
+      totalAmount: totalPrice,
+      totalQuantity: Object.values(cart).reduce((sum, item) => sum + item.quantity, 0),
+    })
+
+
     try {
-      const response = await fetch('/api/order/sendOrder', {
+      const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/orderBySql`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          cart, 
-          orderType: isDineIn ? 'Dine-in' : 'Take away',
-          arrivalTime 
+        body: JSON.stringify({
+          items: cart,
+          vendorId: cart[Object.keys(cart)[0]].vendor_id,
+          customerId: customerId,
+          orderType: isDineIn ? 'dine-in' : 'takeaway',
+          arrivalTime: arrivalTime.toISOString(),
+          orderStatus: 'pending',
+          totalAmount: totalPrice,
+          totalQuantity: Object.values(cart).reduce((sum, item) => sum + item.quantity, 0),
         }),
       });
 
+      console.log('Response: ', response);
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
+        console.log('Fetched Data: ', data);
 
         localStorage.removeItem('cart');
 
-        const qrcodeResponse = await fetch(`/api/order/generateQrCode?orderId=${data.order._id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        
-        if(qrcodeResponse.ok){
-          router.push(`/cart/orderSuccessful/${data.order._id}`);
-        } else {
-          console.error('Failed to generate QR code');
-        }
+        const { qr, orderId } = data;
+
+
+        console.log('Order ID:', orderId);
+        console.log('QR Code:', qr);
+
+        // Store the order data in local storage as a string
+        localStorage.setItem(`orderData-${orderId}`, JSON.stringify({
+          items: Object.values(cart),
+          qr: qr,
+          orderId: orderId,
+          totalAmount: totalPrice
+        }));
+
+        router.push(`/cart/orderSuccessful/${orderId}`);
       } else {
         console.error('Failed to place order! Please try again');
       }
@@ -120,17 +149,15 @@ export default function Component() {
         <div className="flex justify-end p-4">
           <div className="flex items-center space-x-2 bg-orange-100 rounded-full p-1">
             <button
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                isDineIn ? 'bg-red-600 text-white' : 'text-red-600'
-              }`}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${isDineIn ? 'bg-red-600 text-white' : 'text-red-600'
+                }`}
               onClick={() => setIsDineIn(true)}
             >
               Dine-in
             </button>
             <button
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                !isDineIn ? 'bg-red-600 text-white' : 'text-red-600'
-              }`}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${!isDineIn ? 'bg-red-600 text-white' : 'text-red-600'
+                }`}
               onClick={() => setIsDineIn(false)}
             >
               Take away
@@ -186,19 +213,19 @@ export default function Component() {
           ) : (
             Object.values(cart).map((item) => (
               <motion.div
-                key={item._id}
+                key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="bg-white rounded-lg shadow-md p-4 mb-4 flex items-center justify-between"
               >
                 <div>
-                  <h3 className="font-semibold text-lg text-red-800">{item.dishName}</h3>
+                  <h3 className="font-semibold text-lg text-red-800">{item.name}</h3>
                   <p className="text-red-600">Rs. {item.price}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => removeCart(item.dishName)}
+                    onClick={() => removeCart(item.name)}
                     className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"
                   >
                     <Minus className="w-4 h-4" />
@@ -245,7 +272,7 @@ export default function Component() {
                 className="bg-red-800 p-6 rounded-xl shadow-lg w-72"
               >
                 <h2 className="text-white text-xl mb-4">Set arrival time</h2>
-                
+
                 <div className="flex justify-between text-4xl text-white mb-4">
                   <div className="flex flex-col items-center">
                     <button onClick={() => incrementTime(setHours, hours, 12, 1)} className="text-2xl"><ChevronUp /></button>
