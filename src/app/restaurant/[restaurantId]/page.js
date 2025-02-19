@@ -1,18 +1,17 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Utensils, X, ShoppingCart } from 'lucide-react';
-import { useCart } from '@/hooks/useCart';
-import Header from '@/app/components/restaurantPage/Header';
-import RestaurantImage from '@/app/components/restaurantPage/RestaurantImage';
-import RestaurantInfo from '@/app/components/restaurantPage/RestaurantInfo';
-import MenuItem from '@/app/components/restaurantPage/MenuItem';
-import Facilities from '@/app/components/restaurantPage/Facilities';
-import QuickActions from '@/app/components/restaurantPage/QuickActions';
-import Description from '@/app/components/restaurantPage/Description';
-import PhotoSlider from '@/app/components/restaurantPage/PhotoSlider';
-import Link from 'next/link';
-
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Utensils, X, ShoppingCart } from "lucide-react";
+import { useCart } from "@/hooks/useCart";
+import Header from "@/app/components/restaurantPage/Header";
+import RestaurantImage from "@/app/components/restaurantPage/RestaurantImage";
+import RestaurantInfo from "@/app/components/restaurantPage/RestaurantInfo";
+import MenuItem from "@/app/components/restaurantPage/MenuItem";
+import Facilities from "@/app/components/restaurantPage/Facilities";
+import QuickActions from "@/app/components/restaurantPage/QuickActions";
+import Description from "@/app/components/restaurantPage/Description";
+import PhotoSlider from "@/app/components/restaurantPage/PhotoSlider";
+import Link from "next/link";
 
 const Menu = ({ items, cart, onAdd, onRemove }) => {
   return (
@@ -54,12 +53,8 @@ const CheckoutButton = ({ totalItems, totalPrice }) => (
 );
 
 export default function Component({ params }) {
-  const { cart,
-    addCart,
-    removeCart,
-    clearCart,
-    getTotalItems,
-    getTotalPrice, } = useCart();
+  const { cart, addCart, removeCart, clearCart, getTotalItems, getTotalPrice } =
+    useCart();
 
   const [menuForItems, setMenuForItems] = useState([]);
   const [showMenu, setShowMenu] = useState(false);
@@ -83,35 +78,43 @@ export default function Component({ params }) {
           return;
         }
 
-        const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/getRestaurant?restaurantId=${params.restaurantId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await fetch(
+          `https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/getRestaurant?restaurantId=${params.restaurantId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error("Network response was not ok");
         }
         const data = await response.json();
         setRestaurantData(data.data.restaurant);
-        console.log('menu Data: ', data.data.menu);
+        console.log("menu Data: ", data.data.menu);
         setMenuForItems(data.data.menu);
         setImages(data.data.images[0]);
 
-        if (!data.data.images[0].imageurls || data.data.images[0].imageurls.length === 0) {
-          console.warn('No image URLs found');
+        if (
+          !data.data.images[0].imageurls ||
+          data.data.images[0].imageurls.length === 0
+        ) {
+          console.warn("No image URLs found");
         }
 
-        localStorage.setItem(localStorageKey, JSON.stringify({
-          restaurantData: data.data.restaurant,
-          menuForItems: data.data.menu,
-          images: data.data.images[0]
-        }));
+        localStorage.setItem(
+          localStorageKey,
+          JSON.stringify({
+            restaurantData: data.data.restaurant,
+            menuForItems: data.data.menu,
+            images: data.data.images[0],
+          })
+        );
 
-        console.log('Data saved to the local storage!');
-
+        console.log("Data saved to the local storage!");
       } catch (error) {
-        console.error('Error fetching restaurant data', error);
+        console.error("Error fetching restaurant data", error);
       }
     };
     fetchingRestaurantData();
@@ -130,23 +133,27 @@ export default function Component({ params }) {
 
   return (
     <div className="bg-gray-100 min-h-screen pb-28">
-      <Header name='dummy' onBack={() => console.log('Go back')} />
+      <Header name="dummy" onBack={() => console.log("Go back")} />
       <main>
         {images && images.imageurls && images.imageurls.length > 0 ? (
           <PhotoSlider images={images.imageurls} />
         ) : (
           <div>No images available</div> // Or a placeholder component
         )}
-        <div className='p-4 bg-white shadow-md'>
+        <div className="p-4 bg-white shadow-md">
           <RestaurantInfo
             name={restaurantData.restaurantName}
             rating={restaurantData.rating}
-            distance={'1.2'}
+            distance={"1.2"}
           />
           <QuickActions />
         </div>
-        <Description text={"Experience culinary excellence at Gourmet Delights. Our chefs craft exquisite dishes using the finest ingredients, offering a perfect blend of traditional flavors and modern gastronomy. Enjoy a sophisticated ambiance perfect for both casual dining and special occasions. From our signature seafood platters to delectable pasta dishes, every meal is a celebratio"} />
-        <Facilities facilities={["Outdoor Seating", "Valet Parking", "Full Bar", "Wheelchair Accessible"]} />
+        <Description
+          text={
+            "Experience culinary excellence at Gourmet Delights. Our chefs craft exquisite dishes using the finest ingredients, offering a perfect blend of traditional flavors and modern gastronomy. Enjoy a sophisticated ambiance perfect for both casual dining and special occasions. From our signature seafood platters to delectable pasta dishes, every meal is a celebratio"
+          }
+        />
+        <Facilities facilities={["Asthetic environment", "Parking"]} />
       </main>
       <AnimatePresence>
         {showMenu && (
@@ -171,7 +178,10 @@ export default function Component({ params }) {
             />
             {totalItems > 0 && (
               <div className="sticky bottom-0 left-0 right-0 p-4 bg-white shadow-lg">
-                <CheckoutButton totalItems={totalItems} totalPrice={totalPrice} />
+                <CheckoutButton
+                  totalItems={totalItems}
+                  totalPrice={totalPrice}
+                />
               </div>
             )}
           </motion.div>
