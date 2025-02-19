@@ -8,9 +8,11 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import CreativeProfileLoading from './loading';
 import Layout from '../components/layout';
+import { getUserIdFromCookie } from '../actions';
+import { removeAuthCookie } from '../actions';
 
 const ProfilePicture = ({ src }) => (
-  <motion.div 
+  <motion.div
     className="relative w-32 h-32 mx-auto mt-6 mb-4"
     whileHover={{ scale: 1.05 }}
   >
@@ -25,7 +27,7 @@ const ProfilePicture = ({ src }) => (
 );
 
 const InfoSection = ({ title, children }) => (
-  <motion.section 
+  <motion.section
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
@@ -46,7 +48,7 @@ const InfoItem = ({ icon: Icon, label, value }) => (
   </div>
 );
 
-const EditButton = ({onclick}) => (
+const EditButton = ({ onclick }) => (
   <motion.button
     onClick={onclick}
     whileHover={{ scale: 1.05 }}
@@ -57,7 +59,7 @@ const EditButton = ({onclick}) => (
   </motion.button>
 );
 
-const LogoutButton = ({onClick}) => (
+const LogoutButton = ({ onClick }) => (
   <motion.button
     onClick={onClick}
     whileHover={{ scale: 1.05 }}
@@ -69,11 +71,11 @@ const LogoutButton = ({onClick}) => (
   </motion.button>
 );
 
-export default function Component({params}) {
-  
+export default function Component({ params }) {
+
   //TODO: Make feature that user can upload desired profile pic
   //TODO: Ship feature in 1 week
-  
+
   // Returns a random profile picture URL
   const getRandomProfileUrl = () => {
     const randomProfileUrl = Math.floor(Math.random() * profileUrls.length);
@@ -82,7 +84,7 @@ export default function Component({params}) {
 
   // Get the user's profile picture from localStorage or fetch a new one if needed
   const getProfileUrl = () => {
-    if(typeof window === 'undefined'){
+    if (typeof window === 'undefined') {
       return null; // Return null or a default value during SRR 
     }
     const storedProfilePic = localStorage.getItem('profilePic');
@@ -90,9 +92,9 @@ export default function Component({params}) {
     const now = new Date().getTime();
 
     // Get the profile picture from localStorage if it exists and is not older than 1 day
-    if(storedProfilePic && storedTimestamp){
+    if (storedProfilePic && storedTimestamp) {
       const oneDay = 24 * 60 * 60 * 1000;
-      if(now - storedTimestamp < oneDay){
+      if (now - storedTimestamp < oneDay) {
         return storedProfilePic;
       }
     }
@@ -112,14 +114,45 @@ export default function Component({params}) {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('/api/user/getUser', {withCredentials: true});
-        if(response.status === 200){
-          setUserData(response.data);
-        }else{
-          console.error('An error occurred while fetching user data: ', error);
+        const storedUserData = localStorage.getItem('userData')
+        if (storedUserData) {
+          try {
+            setUserData(JSON.parse(storedUserData));
+            console.log('User data fetched from cache:', storedUserData);
+          } catch (error) {
+            console.error('Failed to fetch user data from cache:', error);
+          }
+        } else {
+          const userId = getUserIdFromCookie();
+          console.log('User ID:', userId);
+          const response = await fetch('/api/user/getUser',
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'userId': userId,
+              },
+            }
+          )
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data.data)
+            localStorage.setItem('userData', JSON.stringify(data.data));
+          } else {
+            toast({
+              title: "Error",
+              description: "An error occurred while fetching user data.",
+              variant: "destructive",
+            })
+          }
         }
       } catch (error) {
-        console.error('An error occurred while fetching user data: ', error);
+        console.error('An error occurred while fetching user data:', error)
+        toast({
+          title: "Error",
+          description: "An error occurred while fetching user data.",
+          variant: "destructive",
+        })
       }
     };
 
@@ -131,16 +164,17 @@ export default function Component({params}) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    try{
-      const response = await axios.post('/api/auth/logout', {}, {withCredentials: true});
-
-      if(response.status === 200){
+    try {
+      const result = await removeAuthCookie();
+      if (result) {
         localStorage.removeItem('profilePic');
         localStorage.removeItem('profilePicTimestamp');
         router.push('/login');
+      } else {
+        console.error('Failed to remove auth cookie');
       }
-    }catch(error){
-      console.error('An error occurred while loggin out: ', error);
+    } catch (error) {
+      console.error('An error occurred while logging out: ', error);
     }
   }
 
@@ -149,28 +183,27 @@ export default function Component({params}) {
   }
 
   return (
-      <Layout>
-    <div className="bg-gray-100 min-h-screen pb-8">
-      <main className="max-w-lg mx-auto px-4">
-        <ProfilePicture src={profilePic} />
-        <InfoSection title="Personal Info">
-          <InfoItem icon={User} label="Your name" value={datauser.fullName} />
-          <InfoItem icon={User} label="Username" value={datauser.username} />
-        </InfoSection>
-        <InfoSection title="Contact Info">
-          <InfoItem icon={Phone} label="Phone number" value={datauser.mobileNumber} />
-          <InfoItem icon={Mail} label="Email" value={datauser.email} />
-        </InfoSection>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <EditButton onclick={() => router.push(`/profile/${datauser._id}`)} />
-          <LogoutButton onClick={handleLogout} />
-        </motion.div>
-      </main>
-    </div>
-      </Layout>
+    <Layout>
+      <div className="bg-gray-100 min-h-screen pb-8">
+        <main className="max-w-lg mx-auto px-4">
+          <ProfilePicture src={profilePic} />
+          <InfoSection title="Personal Info">
+            <InfoItem icon={User} label="Your name" value={datauser.name} />
+          </InfoSection>
+          <InfoSection title="Contact Info">
+            <InfoItem icon={Phone} label="Phone number" value={datauser.phonenumber} />
+            <InfoItem icon={Mail} label="Email" value={datauser.email} />
+          </InfoSection>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {/* <EditButton onclick={() => router.push(`/profile/${datauser._id}`)} /> */}
+            <LogoutButton onClick={handleLogout} />
+          </motion.div>
+        </main>
+      </div>
+    </Layout>
   );
 }

@@ -6,7 +6,7 @@ export function generateToken(payload) {
     return jwt.sign(payload, secret, { expiresIn: '5d' });
 }
 
-export function verifyToken(token) {
+export async function verifyToken(token) {
     try {
         return jwt.verify(token, secret);
     } catch (error) {

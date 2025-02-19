@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from '@/hooks/use-toast'
 import Layout from '@/app/components/layout'
+import { getUserIdFromCookie } from '@/app/actions'
 
-const ProfilePicture = ({src}) => (
-  <motion.div 
+const ProfilePicture = ({ src }) => (
+  <motion.div
     className="relative w-32 h-32 mx-auto mt-6 mb-4"
     whileHover={{ scale: 1.05 }}
   >
@@ -28,7 +29,7 @@ const ProfilePicture = ({src}) => (
 )
 
 const InfoSection = ({ title, children }) => (
-  <motion.section 
+  <motion.section
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
@@ -45,7 +46,7 @@ const InfoItem = ({ icon: Icon, label, name, value, onChange, error }) => (
     <div className="flex-grow">
       <Label htmlFor={name} className="text-sm text-gray-500">{label}</Label>
       <Input
-        type= {label === 'Phone number' ? 'number' : 'text'}
+        type={label === 'Phone number' ? 'number' : 'text'}
         id={name}
         name={name}
         value={value}
@@ -93,16 +94,39 @@ export default function EditProfile() {
     setProfilePic(getProfileUrl())
 
     const fetchUserData = async () => {
+
       try {
-        const response = await axios.get('/api/user/getUser', { withCredentials: true })
-        if (response.status === 200) {
-          setUserData(response.data)
+        const storedUserData = localStorage.getItem('userData')
+        if (storedUserData) {
+          try {
+            setUserData(JSON.parse(storedUserData));
+            console.log('User data fetched from cache:', storedUserData);
+          } catch (error) {
+            console.error('Failed to fetch user data from cache:', error);
+          }
         } else {
-          toast({
-            title: "Error",
-            description: "An error occurred while fetching user data.",
-            variant: "destructive",
-          })
+          const userId = getUserIdFromCookie();
+          console.log('User ID:', userId);
+          const response = await fetch('/api/user/getUser',
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'userId': userId,
+              },
+            }
+          )
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data.data)
+            localStorage.setItem('userData', JSON.stringify(data.data));
+          } else {
+            toast({
+              title: "Error",
+              description: "An error occurred while fetching user data.",
+              variant: "destructive",
+            })
+          }
         }
       } catch (error) {
         console.error('An error occurred while fetching user data:', error)
@@ -112,6 +136,28 @@ export default function EditProfile() {
           variant: "destructive",
         })
       }
+
+      // Check if user details is stored in localStorage
+
+      // try {
+      //   const response = await axios.get('/api/user/getUser', { withCredentials: true })
+      //   if (response.status === 200) {
+      //     setUserData(response.data)
+      //   } else {
+      //     toast({
+      //       title: "Error",
+      //       description: "An error occurred while fetching user data.",
+      //       variant: "destructive",
+      //     })
+      //   }
+      // } catch (error) {
+      //   console.error('An error occurred while fetching user data:', error)
+      //   toast({
+      //     title: "Error",
+      //     description: "An error occurred while fetching user data.",
+      //     variant: "destructive",
+      //   })
+      // }
     }
 
     fetchUserData()
@@ -120,7 +166,7 @@ export default function EditProfile() {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setUserData(prev => ({ ...prev, [name]: value }))
-    
+
     // Validate the input
     let error = ''
     switch (name) {
@@ -147,7 +193,7 @@ export default function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     // Check if there are any errors
     if (Object.values(errors).some(error => error !== '')) {
       toast({
@@ -197,38 +243,38 @@ export default function EditProfile() {
 
   return (
     <Layout>
-    <div className="bg-gray-100 min-h-screen pb-8">
-      <main className="max-w-lg mx-auto px-4">
-        {profilePic && <ProfilePicture src={profilePic} />}
-        <form onSubmit={handleSubmit}>
-          <InfoSection title="Personal Info">
-            <InfoItem icon={User} label="Your name" name="fullName" value={userData.fullName} onChange={handleInputChange} error={errors.fullName} />
-            <InfoItem icon={User} label="Username" name="username" value={userData.username} onChange={handleInputChange} error={errors.username} />
-          </InfoSection>
-          <InfoSection title="Contact Info">
-            <InfoItem icon={Phone} label="Phone number" name="mobileNumber" value={userData.mobileNumber} onChange={handleInputChange} error={errors.mobileNumber} />
-            <InfoItem icon={Mail} label="Email" name="email" value={userData.email} onChange={handleInputChange} error={errors.email} />
-          </InfoSection>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="space-y-4"
-          >
-            <Button type="submit" className="w-full bg-red-500 hover:bg-red-600 text-white">
-              Save Changes
-            </Button>
-            <Button type="button" variant="outline" className="w-full border-red-200 text-red-500" onClick={() => router.push('/profile')}>
-              Cancel
-            </Button>
-            <Button type="button" variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-50" onClick={handleLogout}>
-              <LogOut className="w-5 h-5 mr-2" />
-              Log Out
-            </Button>
-          </motion.div>
-        </form>
-      </main>
-    </div>
+      <div className="bg-gray-100 min-h-screen pb-8">
+        <main className="max-w-lg mx-auto px-4">
+          {profilePic && <ProfilePicture src={profilePic} />}
+          <form onSubmit={handleSubmit}>
+            <InfoSection title="Personal Info">
+              <InfoItem icon={User} label="Your name" name="fullName" value={userData.name} onChange={handleInputChange} error={errors.fullName} />
+              <InfoItem icon={User} label="Username" name="username" value='Debmalya Sen' onChange={handleInputChange} error={errors.username} />
+            </InfoSection>
+            <InfoSection title="Contact Info">
+              <InfoItem icon={Phone} label="Phone number" name="mobileNumber" value={userData.phoneNumber} onChange={handleInputChange} error={errors.mobileNumber} />
+              <InfoItem icon={Mail} label="Email" name="email" value={userData.email} onChange={handleInputChange} error={errors.email} />
+            </InfoSection>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="space-y-4"
+            >
+              <Button type="submit" className="w-full bg-red-500 hover:bg-red-600 text-white">
+                Save Changes
+              </Button>
+              <Button type="button" variant="outline" className="w-full border-red-200 text-red-500" onClick={() => router.push('/profile')}>
+                Cancel
+              </Button>
+              <Button type="button" variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-50" onClick={handleLogout}>
+                <LogOut className="w-5 h-5 mr-2" />
+                Log Out
+              </Button>
+            </motion.div>
+          </form>
+        </main>
+      </div>
     </Layout>
   )
 }

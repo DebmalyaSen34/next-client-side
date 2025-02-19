@@ -52,10 +52,16 @@ export async function getUserIdFromCookie() {
 }
 
 export async function removeAuthCookie() {
-    cookies().remove("authToken", {
-        path: '/'
-    });
-    redirect('/login');
+    try {
+        cookies().remove("authToken", {
+            path: '/'
+        });
+        return true;
+    } catch (error) {
+        console.error('Failed to remove auth cookie:', error);
+        return false;
+    }
+
 }
 
 export async function confirmOrder(items, orderId, qr) {
