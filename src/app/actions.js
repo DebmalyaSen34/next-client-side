@@ -28,7 +28,7 @@ export async function getUserIdFromCookie() {
     console.log('Token: ', token);
 
     try {
-        const decodedToken = verifyToken(token);
+        const decodedToken = await verifyToken(token);
 
         console.log('Decoded Token: ', decodedToken);
 

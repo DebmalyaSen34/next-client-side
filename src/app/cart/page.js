@@ -64,6 +64,12 @@ export default function Component() {
 
     const customerId = await getUserIdFromCookie();
 
+    if (!customerId) {
+      console.error('Customer ID is null. Cannot proceed with order.');
+      setIsLoading(false);
+      return;
+    }
+
     console.log('Customer id: ', customerId);
 
     console.log({
