@@ -1,7 +1,22 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Utensils, X, ShoppingCart } from "lucide-react";
+import {
+  Utensils,
+  X,
+  ShoppingCart,
+  Loader2,
+  ChefHat,
+  Coffee,
+  Pizza,
+  Star,
+  Timer,
+  Clock,
+  MapPin
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { useCart } from "@/hooks/useCart";
 import Header from "@/app/components/restaurantPage/Header";
 import RestaurantImage from "@/app/components/restaurantPage/RestaurantImage";
@@ -13,7 +28,115 @@ import Description from "@/app/components/restaurantPage/Description";
 import PhotoSlider from "@/app/components/restaurantPage/PhotoSlider";
 import Link from "next/link";
 
-const Menu = ({ items, cart, onAdd, onRemove }) => {
+const SliderLoader = () => (
+  <Card className="w-full h-48 bg-gradient-to-r from-rose-100 to-teal-50 overflow-hidden relative border-none rounded-none shadow-sm">
+    {/* Background shimmer effect */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer"></div>
+
+    <div className="absolute inset-0 flex items-center justify-center">
+      {/* Main animated plate - smaller on mobile, larger on desktop */}
+      <div className="relative">
+        <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-white shadow-md flex items-center justify-center relative overflow-hidden">
+          {/* Inner plate ring - responsive sizing */}
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-slate-100 absolute"></div>
+
+          {/* Rotating food icons - adjusted positioning for responsiveness */}
+          <div className="absolute animate-spin-slow">
+            <div className="relative w-16 h-16 sm:w-24 sm:h-24">
+              <Pizza className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 absolute top-0 left-6 sm:left-9" />
+              <Coffee className="w-5 h-5 sm:w-6 sm:h-6 text-brown-600 absolute bottom-0 left-6 sm:left-9" />
+              <ChefHat className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 absolute left-0 top-6 sm:top-9" />
+              <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 absolute right-0 top-6 sm:top-9" />
+            </div>
+          </div>
+        </div>
+
+        {/* Steam animation - adjusted for mobile */}
+        <div className="absolute -top-6 sm:-top-8 left-1/2 transform -translate-x-1/2 flex gap-1 sm:gap-1.5">
+          <div className="hidden sm:block w-1 h-6 bg-white rounded-full animate-steam opacity-60 delay-100"></div>
+          <div className="w-1 h-6 sm:h-8 bg-white rounded-full animate-steam opacity-75 delay-300"></div>
+          <div className="w-1 h-5 sm:h-7 bg-white rounded-full animate-steam opacity-60 delay-500"></div>
+          <div className="hidden sm:block w-1 h-5 bg-white rounded-full animate-steam opacity-80 delay-700"></div>
+        </div>
+      </div>
+    </div>
+
+    {/* Restaurant info skeletons - more responsive spacing and sizes */}
+    <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 flex flex-col gap-2 sm:gap-3">
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-4 sm:h-5 w-28 sm:w-40 rounded-md" />
+        <div className="flex gap-1 items-center">
+          <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 animate-pulse" />
+          <Skeleton className="h-3 sm:h-4 w-8 sm:w-10 rounded-md" />
+        </div>
+      </div>
+
+      <div className="flex gap-2 sm:gap-3">
+        <Badge variant="outline" className="bg-white/50 flex items-center gap-1 h-5 sm:h-6 px-2 text-xs sm:text-sm">
+          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400" />
+          <Skeleton className="h-2.5 sm:h-3 w-8 sm:w-10 rounded-md" />
+        </Badge>
+
+        <Badge variant="outline" className="bg-white/50 flex items-center gap-1 h-5 sm:h-6 px-2 text-xs sm:text-sm">
+          <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400" />
+          <Skeleton className="h-2.5 sm:h-3 w-10 sm:w-14 rounded-md" />
+        </Badge>
+      </div>
+    </div>
+  </Card>
+);
+
+const MenuItemLoader = () => (
+  <div className="flex items-start gap-3 p-4 border-b border-gray-100">
+    {/* Dish image skeleton with food animation */}
+    <div className="relative min-w-[80px] w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer"></div>
+
+      {/* Animated food icon */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative">
+          <div className="w-10 h-10 rounded-full bg-white/70 flex items-center justify-center animate-pulse">
+            <Utensils className="w-5 h-5 text-amber-400" />
+          </div>
+          {/* Mini steam */}
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+            <div className="w-0.5 h-3 bg-white rounded-full animate-steam opacity-60 delay-100"></div>
+            <div className="w-0.5 h-4 bg-white rounded-full animate-steam opacity-70 delay-300"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Content section */}
+    <div className="flex-1 space-y-2">
+      <div className="flex justify-between">
+        <Skeleton className="h-4 w-24 rounded-md" />
+        <Skeleton className="h-4 w-12 rounded-md" />
+      </div>
+      <Skeleton className="h-3 w-full max-w-[180px] rounded-md" />
+      <Skeleton className="h-3 w-full max-w-[220px] rounded-md" />
+
+      {/* Add to cart button skeleton */}
+      <div className="flex justify-end mt-2">
+        <Skeleton className="h-7 w-16 rounded-full" />
+      </div>
+    </div>
+  </div>
+);
+
+const MenuItemsLoader = () => (
+  <div className="p-4 bg-white shadow-md mt-4 rounded-md">
+    <Skeleton className="h-6 w-24 mb-4 rounded-md" />
+    {[1, 2, 3].map((item) => (
+      <MenuItemLoader key={item} />
+    ))}
+  </div>
+);
+
+const Menu = ({ items, cart, onAdd, onRemove, isLoading }) => {
+  if (isLoading) {
+    return <MenuItemsLoader />;
+  }
   return (
     <div className="p-4">
       {items.map((item) => (
@@ -59,7 +182,10 @@ export default function Component({ params }) {
   const [menuForItems, setMenuForItems] = useState([]);
   const [showMenu, setShowMenu] = useState(false);
   const [restaurantData, setRestaurantData] = useState({});
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState({ imageurls: [], loaded: false });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [menuLoading, setMenuLoading] = useState(true);
 
   console.log(params.restaurantId);
 
@@ -73,8 +199,10 @@ export default function Component({ params }) {
           const parsedData = JSON.parse(storedData);
           setRestaurantData(parsedData.restaurantData);
           setMenuForItems(parsedData.menuForItems);
-          setImages(parsedData.images);
+          setImages({ ...parsedData.images, loaded: true });
           console.log("Data loaded from the local storage!");
+          setIsLoading(false);
+          setMenuLoading(false);
           return;
         }
 
@@ -94,7 +222,8 @@ export default function Component({ params }) {
         setRestaurantData(data.data.restaurant);
         console.log("menu Data: ", data.data.menu);
         setMenuForItems(data.data.menu);
-        setImages(data.data.images[0]);
+        // setImages(data.data.images[0]);
+        setImages({ ...data.data.images[0], loaded: true });
 
         if (
           !data.data.images[0].imageurls ||
@@ -108,13 +237,18 @@ export default function Component({ params }) {
           JSON.stringify({
             restaurantData: data.data.restaurant,
             menuForItems: data.data.menu,
-            images: data.data.images[0],
+            // images: data.data.images[0],
+            images: { ...data.data.images[0], loaded: true },
           })
         );
 
         console.log("Data saved to the local storage!");
+        setIsLoading(false);
+        setMenuLoading(false);
       } catch (error) {
         console.error("Error fetching restaurant data", error);
+        setIsLoading(false);
+        setMenuLoading(false);
       }
     };
     fetchingRestaurantData();
@@ -135,10 +269,15 @@ export default function Component({ params }) {
     <div className="bg-gray-100 min-h-screen pb-28">
       <Header name="dummy" onBack={() => console.log("Go back")} />
       <main>
-        {images && images.imageurls && images.imageurls.length > 0 ? (
-          <PhotoSlider images={images.imageurls} />
+        {images &&
+          images.loaded &&
+          images.imageurls &&
+          images.imageurls.length > 0 ? (
+          <div className="relative">
+            <PhotoSlider images={images.imageurls} />
+          </div>
         ) : (
-          <div>No images available</div> // Or a placeholder component
+          <SliderLoader />
         )}
         <div className="p-4 bg-white shadow-md">
           <RestaurantInfo
@@ -154,6 +293,7 @@ export default function Component({ params }) {
           }
         />
         <Facilities facilities={["Asthetic environment", "Parking"]} />
+
       </main>
       <AnimatePresence>
         {showMenu && (
@@ -170,14 +310,19 @@ export default function Component({ params }) {
                 <X className="w-6 h-6 text-black" />
               </button>
             </div>
-            <Menu
-              items={menuForItems}
-              cart={cart}
-              onAdd={handleAddToCart}
-              onRemove={handleRemoveFromCart}
-            />
+            <div className="flex-1 overflow-y-auto pb-24"> {/* Added padding-bottom for scroll space */}
+              <Menu
+                items={menuForItems}
+                cart={cart}
+                onAdd={handleAddToCart}
+                onRemove={handleRemoveFromCart}
+                isLoading={menuLoading}
+              />
+            </div>
+
+            {/* Checkout button - fixed at bottom */}
             {totalItems > 0 && (
-              <div className="sticky bottom-0 left-0 right-0 p-4 bg-white shadow-lg">
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm shadow-[0_-4px_10px_rgba(0,0,0,0.1)] border-t border-gray-100">
                 <CheckoutButton
                   totalItems={totalItems}
                   totalPrice={totalPrice}

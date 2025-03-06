@@ -137,6 +137,7 @@ export default function Component() {
   };
 
   const handleCancelTimer = () => {
+    console.log("Cancel timer clicked");
     setShowArrivalModal(false);
   };
 
@@ -262,64 +263,156 @@ export default function Component() {
           </div>
         )}
 
-        {/* Arrival Time Modal */}
-        <AnimatePresence>
+        {/* Arrival Time Modal - Improved Design */}
+        <AnimatePresence mode='wait'>
           {showArrivalModal && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
             >
               <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-red-800 p-6 rounded-xl shadow-lg w-72"
+                className="bg-gradient-to-br from-red-800 to-red-900 p-6 rounded-xl shadow-2xl w-[320px] relative overflow-hidden"
               >
-                <h2 className="text-white text-xl mb-4">Set arrival time</h2>
+                {/* Background decorative elements */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-red-500"></div>
+                <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-red-700/30 blur-xl"></div>
+                <div className="absolute -bottom-32 -left-16 w-64 h-64 rounded-full bg-orange-900/20 blur-xl"></div>
 
-                <div className="flex justify-between text-4xl text-white mb-4">
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => incrementTime(setHours, hours, 12, 1)} className="text-2xl"><ChevronUp /></button>
-                    <span>{hours.toString().padStart(2, '0')}</span>
-                    <button onClick={() => decrementTime(setHours, hours, 12, 1)} className="text-2xl"><ChevronDown /></button>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => incrementTime(setMinutes, minutes, 59)} className="text-2xl"><ChevronUp /></button>
-                    <span>{minutes.toString().padStart(2, '0')}</span>
-                    <button onClick={() => decrementTime(setMinutes, minutes, 59)} className="text-2xl"><ChevronDown /></button>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => incrementTime(setSeconds, seconds, 59)} className="text-2xl"><ChevronUp /></button>
-                    <span>{seconds.toString().padStart(2, '0')}</span>
-                    <button onClick={() => decrementTime(setSeconds, seconds, 59)} className="text-2xl"><ChevronDown /></button>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <button onClick={() => setPeriod(prev => prev === 'AM' ? 'PM' : 'AM')} className="text-2xl"><ChevronUp /></button>
-                    <span className="text-2xl">{period}</span>
-                    <button onClick={() => setPeriod(prev => prev === 'AM' ? 'PM' : 'AM')} className="text-2xl"><ChevronDown /></button>
-                  </div>
-                </div>
-
-                <div className="text-2xl text-white mb-4 text-center">
-                  {currentTime}
-                </div>
-
-                <div className="flex justify-between">
+                {/* Close button */}
+                <div className="absolute top-3 right-3">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 rounded-md border border-white text-white"
-                    onClick={handleCancelTimer}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="bg-red-700/40 hover:bg-red-700/60 rounded-full p-1.5 text-white z-20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log("Close button clicked");
+                      setShowArrivalModal(false);
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                </div>
+
+                {/* Header with clock icon */}
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-2 bg-red-700/50 rounded-full">
+                    <Clock className="w-5 h-5 text-orange-200" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-white">Set your arrival time</h2>
+                </div>
+
+                {/* Current and estimated time */}
+                <div className="bg-white/10 rounded-lg p-3 mb-6 text-center backdrop-blur-sm">
+                  <div className="text-sm font-medium text-orange-200 mb-1">Current time</div>
+                  <div className="text-xl text-white font-medium">{currentTime}</div>
+                </div>
+
+                {/* Time selector - improved layout and visuals */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  {/* Hours */}
+                  <div className="flex flex-col items-center">
+                    <label className="text-xs text-orange-200 mb-1">Hour</label>
+                    <div className="bg-red-700/30 rounded-lg p-2 w-full">
+                      <button
+                        onClick={() => incrementTime(setHours, hours, 12, 1)}
+                        className="w-full h-8 flex items-center justify-center text-white hover:bg-red-700/50 rounded-md transition-colors"
+                      >
+                        <ChevronUp className="w-5 h-5" />
+                      </button>
+                      <div className="text-2xl text-white font-bold text-center my-2">
+                        {hours.toString().padStart(2, '0')}
+                      </div>
+                      <button
+                        onClick={() => decrementTime(setHours, hours, 12, 1)}
+                        className="w-full h-8 flex items-center justify-center text-white hover:bg-red-700/50 rounded-md transition-colors"
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Minutes */}
+                  <div className="flex flex-col items-center">
+                    <label className="text-xs text-orange-200 mb-1">Minute</label>
+                    <div className="bg-red-700/30 rounded-lg p-2 w-full">
+                      <button
+                        onClick={() => incrementTime(setMinutes, minutes, 59)}
+                        className="w-full h-8 flex items-center justify-center text-white hover:bg-red-700/50 rounded-md transition-colors"
+                      >
+                        <ChevronUp className="w-5 h-5" />
+                      </button>
+                      <div className="text-2xl text-white font-bold text-center my-2">
+                        {minutes.toString().padStart(2, '0')}
+                      </div>
+                      <button
+                        onClick={() => decrementTime(setMinutes, minutes, 59)}
+                        className="w-full h-8 flex items-center justify-center text-white hover:bg-red-700/50 rounded-md transition-colors"
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* AM/PM */}
+                  <div className="flex flex-col items-center">
+                    <label className="text-xs text-orange-200 mb-1">Period</label>
+                    <div className="bg-red-700/30 rounded-lg p-2 w-full h-full flex flex-col justify-between">
+                      <button
+                        onClick={() => setPeriod('AM')}
+                        className={`flex-1 flex items-center justify-center rounded-md transition-colors mb-1 ${period === 'AM'
+                          ? 'bg-red-600 text-white font-medium'
+                          : 'text-orange-200 hover:bg-red-700/50'}`}
+                      >
+                        AM
+                      </button>
+                      <button
+                        onClick={() => setPeriod('PM')}
+                        className={`flex-1 flex items-center justify-center rounded-md transition-colors ${period === 'PM'
+                          ? 'bg-red-600 text-white font-medium'
+                          : 'text-orange-200 hover:bg-red-700/50'}`}
+                      >
+                        PM
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selected time preview */}
+                <div className="bg-gradient-to-r from-red-600 to-orange-600 p-3 rounded-lg mb-6">
+                  <div className="text-xs text-orange-200 mb-1 text-center">Your arrival time</div>
+                  <div className="text-2xl font-bold text-white text-center">
+                    {hours.toString().padStart(2, '0')}:
+                    {minutes.toString().padStart(2, '0')} {period}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-between gap-3">
+                  {/* //! Cancel button removed */}
+                  {/* <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex-1 py-3 px-4 rounded-lg border border-orange-300/30 text-orange-200 font-medium hover:bg-red-700/30 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert('Order will be cancelled');
+                      setShowArrivalModal(false);
+                    }}
                     disabled={isLoading}
                   >
                     Cancel
-                  </motion.button>
+                  </motion.button> */}
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 rounded-md bg-red-600 text-white flex items-center justify-center"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex-1 py-3 px-4 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium shadow-lg flex items-center justify-center"
                     onClick={handleConfirmOrder}
                     disabled={isLoading}
                   >
@@ -329,7 +422,7 @@ export default function Component() {
                         Processing...
                       </>
                     ) : (
-                      'Save'
+                      'Confirm'
                     )}
                   </motion.button>
                 </div>

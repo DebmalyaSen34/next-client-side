@@ -90,3 +90,44 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes steam {
+  0% {
+    transform: translateY(0) scaleX(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-10px) scaleX(1.5);
+  }
+  95% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-20px) scaleX(2);
+    opacity: 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-steam {
+  animation: steam 2s infinite ease-out;
+}
+
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}

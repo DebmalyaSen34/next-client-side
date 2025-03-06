@@ -20,6 +20,8 @@ export async function setAuthCookie(token) {
 export async function getUserIdFromCookie() {
     const token = cookies().get("authToken")?.value;
 
+    console.log("Token: ", token);
+
     if (!token) {
         console.log('No token found');
         return null;
