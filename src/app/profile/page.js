@@ -1,15 +1,15 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, MapPin, Phone, Mail, Edit2, ChevronRight, ArrowLeft, LogOut } from 'lucide-react';
+import { User, MapPin, Phone, Mail, Edit2, ChevronRight, ArrowLeft, LogOut, BarChart3, DollarSign, Utensils, IndianRupee } from 'lucide-react';
 import Image from 'next/image';
 import profileUrls from './profilePictures';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 import CreativeProfileLoading from './loading';
 import Layout from '../components/layout';
 import { getUserIdFromCookie } from '../actions';
 import { removeAuthCookie } from '../actions';
+import { useToast } from '@/hooks/use-toast';
 
 const ProfilePicture = ({ src }) => (
   <motion.div
@@ -71,10 +71,33 @@ const LogoutButton = ({ onClick }) => (
   </motion.button>
 );
 
+const FavoriteItem = ({ name, count, rank }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.3, delay: 0.1 * rank }}
+    className="flex items-center p-3 bg-white rounded-lg shadow-sm mb-2"
+  >
+    <div
+      className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${rank === 0 ? "bg-yellow-400" : rank === 1 ? "bg-gray-300" : "bg-amber-600"
+        }`}
+    >
+      <span className="font-bold text-white">{rank + 1}</span>
+    </div>
+    <div className="flex-1">
+      <p className="font-medium text-gray-800">{name}</p>
+      <p className="text-sm text-gray-500">Ordered {count} times</p>
+    </div>
+    <Utensils className="w-5 h-5 text-red-500" />
+  </motion.div>
+)
+
 export default function Component({ params }) {
 
   //TODO: Make feature that user can upload desired profile pic
   //TODO: Ship feature in 1 week
+
+  const { toast } = useToast();
 
   // Returns a random profile picture URL
   const getRandomProfileUrl = () => {
@@ -109,6 +132,9 @@ export default function Component({ params }) {
   // State to keep track of the loading state of the profile picture and user Data
   const [profilePic, setProfilePic] = useState(getProfileUrl());
   const [datauser, setUserData] = useState(null);
+  const [favoriteItems, setFavoriteItems] = useState([])
+  const [weeklyExpenditure, setWeeklyExpenditure] = useState(0)
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true)
 
   React.useEffect(() => {
 
@@ -123,36 +149,27 @@ export default function Component({ params }) {
             console.error('Failed to fetch user data from cache:', error);
           }
         } else {
-          const userId = getUserIdFromCookie();
+          const userId = await getUserIdFromCookie();
           console.log('User ID:', userId);
-          const response = await fetch('/api/user/getUser',
+          const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/profile?customerId=${userId}`,
             {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
-                'userId': userId,
               },
             }
           )
           if (response.ok) {
             const data = await response.json();
-            setUserData(data.data)
-            localStorage.setItem('userData', JSON.stringify(data.data));
+            console.log('Fetched user data:', data.data);
+            setUserData(data.data[0])
+            localStorage.setItem('userData', JSON.stringify(data.data[0]));
           } else {
-            toast({
-              title: "Error",
-              description: "An error occurred while fetching user data.",
-              variant: "destructive",
-            })
+            console.error('Failed to fetch user data:', response.statusText);
           }
         }
       } catch (error) {
-        console.error('An error occurred while fetching user data:', error)
-        toast({
-          title: "Error",
-          description: "An error occurred while fetching user data.",
-          variant: "destructive",
-        })
+        console.error('An error occurred while fetching user data:', error);
       }
     };
 
@@ -160,9 +177,91 @@ export default function Component({ params }) {
 
   }, []);
 
+  React.useEffect(() => {
+    const fetchOrderHistory = async () => {
+      if (!datauser) return
+
+      try {
+        setIsLoadingOrders(true)
+
+        // Get current date and date from 7 days ago
+        const today = new Date()
+        const sevenDaysAgo = new Date(today)
+        sevenDaysAgo.setDate(today.getDate() - 7)
+
+        // Format dates for Supabase query
+        // const todayStr = today.toISOString()
+        // const sevenDaysAgoStr = sevenDaysAgo.toISOString()
+
+        // Fetch orders from Supabase
+        const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/orderHistory?customerId=${datauser.id}`)
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch order history")
+        }
+
+        // Process orders to find favorite items and calculate weekly expenditure
+        const itemCounts = {}
+        let totalSpent = 0
+
+        const data = await response.json()
+
+        const orders = data.data
+
+        console.log('Fetched orders:', orders);
+
+        orders.forEach((order) => {
+          // Calculate total spent
+          console.log('Order:', order);
+          totalSpent = totalSpent + order.totalamount;
+
+          // Count item frequencies
+          if (order.items) {
+            const itemsArray = Object.values(order.items);
+            itemsArray.forEach((item) => {
+              if (itemCounts[item.name]) {
+                itemCounts[item.name].count += item.quantity;
+                itemCounts[item.name].totalSpent += parseFloat(item.price) * item.quantity;
+              } else {
+                itemCounts[item.name] = {
+                  count: item.quantity,
+                  totalSpent: parseFloat(item.price) * item.quantity,
+                };
+              }
+            });
+          } else {
+            console.warn('Order does not contain items:', order);
+          }
+        })
+
+        // Sort items by frequency and get top 3
+        const sortedItems = Object.entries(itemCounts)
+          .map(([name, data]) => ({
+            name,
+            count: data.count,
+            totalSpent: data.totalSpent,
+          }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3)
+
+        setFavoriteItems(sortedItems)
+        setWeeklyExpenditure(totalSpent)
+        setIsLoadingOrders(false)
+      } catch (error) {
+        console.error("Error fetching order history:", error)
+        setIsLoadingOrders(false)
+      }
+    }
+
+    if (datauser) {
+      fetchOrderHistory()
+    }
+  }, [datauser])
+
 
   const router = useRouter();
 
+  //TODO: Fix Logout Error
   const handleLogout = async () => {
     try {
       const result = await removeAuthCookie();
@@ -177,6 +276,10 @@ export default function Component({ params }) {
       console.error('An error occurred while logging out: ', error);
     }
   }
+
+  React.useEffect(() => {
+    console.log('Updated datauser:', datauser);
+  }, [datauser]);
 
   if (!datauser) {
     return <CreativeProfileLoading />;
@@ -193,6 +296,57 @@ export default function Component({ params }) {
           <InfoSection title="Contact Info">
             <InfoItem icon={Phone} label="Phone number" value={datauser.phonenumber} />
             <InfoItem icon={Mail} label="Email" value={datauser.email} />
+          </InfoSection>
+          <InfoSection title="Your Favorite Dishes">
+            {isLoadingOrders ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-pulse flex space-x-4">
+                  <div className="h-12 w-full bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ) : favoriteItems.length > 0 ? (
+              <>
+                {favoriteItems.map((item, index) => (
+                  <FavoriteItem key={item.name} name={item.name} count={item.count} rank={index} />
+                ))}
+              </>
+            ) : (
+              <p className="text-gray-500 text-center py-3">No order history found.</p>
+            )}
+          </InfoSection>
+
+          <InfoSection title="Weekly Food Expenditure">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <BarChart3 className="w-10 h-10 text-red-500 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-500">This week&apos;s spending</p>
+                  <p className="font-bold text-2xl text-red-500">
+                    ₹{isLoadingOrders ? "..." : weeklyExpenditure.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <motion.div
+                className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <IndianRupee className="w-8 h-8 text-red-500" />
+              </motion.div>
+            </div>
+
+            {!isLoadingOrders && favoriteItems.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100"
+              >
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Pro tip:</span> You spent ₹{favoriteItems[0]?.totalSpent.toFixed(2)} on{" "}
+                  {favoriteItems[0]?.name} this week!
+                </p>
+              </motion.div>
+            )}
           </InfoSection>
           <motion.div
             initial={{ opacity: 0, y: 20 }}

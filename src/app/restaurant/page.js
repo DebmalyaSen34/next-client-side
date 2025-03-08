@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Star, Clock, ChevronDown, Filter, X } from 'lucide-react';
 import Layout from '../components/layout';
+import Image from 'next/image';
 
 const RestaurantCard = ({ restaurant }) => {
   return (
@@ -14,7 +15,7 @@ const RestaurantCard = ({ restaurant }) => {
       className="bg-white rounded-lg shadow-md overflow-hidden mb-4"
     >
       <div className="relative h-48">
-        <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
+        <Image src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" width={800} height={600} />
         <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded-full text-xs font-semibold text-gray-700 flex items-center">
           <Clock className="w-3 h-3 mr-1" />
           {restaurant.prepTime} mins
@@ -48,8 +49,8 @@ const CuisineFilter = ({ cuisines, activeCuisine, setActiveCuisine }) => {
           key={cuisine}
           whileTap={{ scale: 0.95 }}
           className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${activeCuisine === cuisine
-              ? 'bg-red-500 text-white'
-              : 'bg-gray-200 text-gray-700'
+            ? 'bg-red-500 text-white'
+            : 'bg-gray-200 text-gray-700'
             }`}
           onClick={() => setActiveCuisine(cuisine)}
         >

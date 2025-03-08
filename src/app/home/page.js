@@ -53,10 +53,12 @@ export default function HomePage() {
 
         {/* Featured Restaurant */}
         <div className="relative">
-          <img
+          <Image
             src="https://www.fabhotels.com/blog/wp-content/uploads/2018/08/resize_290818_Tatva_New.jpg"
             alt="Featured Restaurant"
             className="w-full h-48 object-cover"
+            width={800}
+            height={300}
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
             <h2 className="text-white text-xl font-bold">Featured Restaurant</h2>
@@ -92,7 +94,8 @@ export default function HomePage() {
                     className="bg-white rounded-lg shadow-md p-4 flex items-center space-x-4"
                   >
                     <Image
-                      src={restaurant.logourl}
+                      // src={restaurant.logourl}
+                      src='https://storage.googleapis.com/preperly/1234567890/restaurantLogo/image-1741427092822-61f8164f-001e-4c0f-b26f-3d18da7bd008.png'
                       alt={restaurant.restaurantname}
                       className="rounded-lg object-cover"
                       width={120}

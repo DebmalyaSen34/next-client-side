@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Image from 'next/image'
 
 export default function ImageUpload() {
   const [file, setFile] = useState(null)
@@ -83,7 +84,7 @@ export default function ImageUpload() {
       {uploadedImageUrl && (
         <div className="mt-6">
           <p className="text-sm font-medium text-gray-700">Uploaded Image:</p>
-          <img src={uploadedImageUrl} alt="Uploaded" className="mt-2 max-w-full h-auto rounded-lg shadow-sm" />
+          <Image src={uploadedImageUrl} alt="Uploaded" className="mt-2 max-w-full h-auto rounded-lg shadow-sm" width={800} height={600} />
         </div>
       )}
     </div>

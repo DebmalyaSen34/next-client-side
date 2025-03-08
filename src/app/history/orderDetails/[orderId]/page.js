@@ -16,12 +16,13 @@ export default function OrderDetailPage({ params }) {
   React.useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const orderResponse = await fetch(`/api/user/history/${orderId}`)
+        const orderResponse = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/orderHistory/${orderId}`)
         if (!orderResponse.ok) {
           throw new Error('Failed to fetch order details')
         }
         const data = await orderResponse.json()
-        setOrder(data)
+        console.log('Fetched order details:', data.data)
+        setOrder(data.data[0])
       } catch (error) {
         console.error('Error fetching order details:', error)
       } finally {
@@ -111,24 +112,25 @@ export default function OrderDetailPage({ params }) {
             className="bg-white rounded-lg shadow-lg overflow-hidden"
           >
             <div className="bg-red-800 text-white p-6">
-              <h1 className="text-2xl font-bold mb-2">{order.restaurantId.restaurantName}</h1>
-              <p className="text-white">Order #{order._id.slice(0, 6)}</p>
+              {/* <h1 className="text-2xl font-bold mb-2">{order.restaurantId.restaurantName}</h1> */}
+              <h1 className="text-2xl font-bold mb-2">Dummy Restaurant</h1>
+              <p className="text-white">Order #{order.id.slice(0, 6)}</p>
             </div>
 
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center text-gray-600">
                   <Clock className="w-5 h-5 mr-2" />
-                  <span>{formatDate(order.orderDate)}</span>
+                  <span>{formatDate(order.arrivaltime)}</span>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${order.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                  {order.isActive ? 'Active' : 'Completed'}
+                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${order.orderstatus === 'compledted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                  {order.orderstatus === 'completed' ? 'Completed' : 'Pending'}
                 </div>
               </div>
 
               <h2 className="text-xl font-semibold mb-4 text-red-800">Order Items</h2>
               <ul className="divide-y divide-gray-200">
-                {order.items.map((item, index) => (
+                {Object.values(order.items).map((item, index) => (
                   <motion.li
                     key={index}
                     variants={itemAnimation}
@@ -138,7 +140,7 @@ export default function OrderDetailPage({ params }) {
                     className="py-4 flex justify-between"
                   >
                     <div>
-                      <p className="font-medium text-red-500">{item.dishName}</p>
+                      <p className="font-medium text-red-500">{item.name}</p>
                       <p className="text-black">Quantity: {item.quantity}</p>
                     </div>
                     <p className="font-semibold text-red-600">₹{item.price * item.quantity}</p>
@@ -149,7 +151,7 @@ export default function OrderDetailPage({ params }) {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-red-700">Total Amount</span>
-                  <span className="text-2xl font-bold text-red-800">₹{order.totalAmount}</span>
+                  <span className="text-2xl font-bold text-red-800">₹{order.totalamount}</span>
                 </div>
               </div>
             </div>
@@ -165,16 +167,16 @@ export default function OrderDetailPage({ params }) {
                   </div>
                 </div>
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5 }}
-                    className="mb-6"
-                  >
-                    <h2 className="text-lg font-semibold text-red-800 mb-2">Your Order QR Code:</h2>
-                    <div className="flex justify-center">
-                      <Image src={order.qrcode} alt="Order QR Code" width={200} height={200} />
-                    </div>
-                  </motion.div>
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.5 }}
+                  className="mb-6"
+                >
+                  <h2 className="text-lg font-semibold text-red-800 mb-2">Your Order QR Code:</h2>
+                  <div className="flex justify-center">
+                    <Image src={order.qrcode} alt="Order QR Code" width={200} height={200} />
+                  </div>
+                </motion.div>
               </div>
             </div>
           </motion.div>

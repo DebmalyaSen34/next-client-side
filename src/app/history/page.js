@@ -6,6 +6,8 @@ import { Menu, User, Home, Search, ShoppingCart, ChevronRight, UtensilsCrossed, 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Layout from '../components/layout';
+import { getUserIdFromCookie } from '../actions';
+import Image from 'next/image';
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState('ongoing');
@@ -19,13 +21,18 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/user/history');
+        const userId = await getUserIdFromCookie();
+        console.log('User ID:', userId);
+        const response = await fetch(`https://${process.env.NEXT_PUBLIC_BACKEND_URL}/api/customer/orderHistory?customerId=${userId}`);
         if (!response.ok) {
           throw new Error('An error occurred while fetching orders');
         }
         const data = await response.json();
-        const ongoingOrders = data.filter(order => order.isActive !== false);
-        const historyOrders = data.filter(order => order.isActive === false);
+        console.log('Fetched orders:', data);
+        const ongoingOrders = data.data.filter(order => order.orderstatus === 'pending');
+        const historyOrders = data.data.filter(order => order.orderstatus === 'completed');
+        console.log('Ongoing orders:', ongoingOrders);
+        console.log('History orders:', historyOrders);
         setOrders({ ongoing: ongoingOrders, history: historyOrders });
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -45,8 +52,8 @@ export default function OrdersPage() {
   };
 
   const handleViewDetails = (order) => {
-    if (order && order._id) {
-      router.push(`history/orderDetails/${order._id}`);
+    if (order && order.id) {
+      router.push(`history/orderDetails/${order.id}`);
     } else {
       console.error('Order not found', order);
     }
@@ -56,28 +63,40 @@ export default function OrdersPage() {
     <AnimatePresence>
       {orderList.map((order) => (
         <motion.div
-          key={order._id}
+          key={order.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className="bg-white rounded-lg shadow-md p-4 mb-4"
         >
           <div className="flex items-center mb-4">
-            <img src={order.items[0].imageUrl} alt={order.restaurantName} className="w-12 h-12 rounded-full mr-4" />
+            <Image src='https://storage.googleapis.com/preperly/1234567890/restaurantLogo/image-1741427092822-61f8164f-001e-4c0f-b26f-3d18da7bd008.png' alt='Dummy Restaurant' className="w-12 h-12 rounded-full mr-4" width={48} height={48} />
             <div>
-              <h3 className="font-semibold text-lg text-red-800">{order.restaurantName}</h3>
+              {/* <h3 className="font-semibold text-lg text-red-800">{order.restaurantName}</h3> */}
+              <h3 className="font-semibold text-lg text-red-800">Dummy Restaurant</h3>
               <p className="text-red-500 text-sm">
-                #{order._id.slice(0, 6)} | {order.items.length} Items
+                #{order.id.slice(0, 6)} | {order.totalquantity} Items
               </p>
-              {isHistory && (
+              {!isHistory && (
                 <p className="text-orange-500 text-xs">
                   <Clock className="inline-block w-3 h-3 mr-1" />
-                  {new Date(order.orderDate).toLocaleDateString()}
+                  {(() => {
+                    const dateObj = new Date(order.arrivaltime);
+                    console.log("Original string:", order.arrivaltime);
+                    console.log("Parsed date object:", dateObj);
+                    return dateObj.toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+                  })()}
                 </p>
               )}
             </div>
             <div className="ml-auto">
-              <p className="font-semibold text-lg text-black">Rs. {order.totalAmount}</p>
+              <p className="font-semibold text-lg text-black">₹ {order.totalamount}</p>
             </div>
           </div>
           {!isHistory && (
@@ -160,21 +179,19 @@ export default function OrdersPage() {
       <main className="flex-grow p-4">
         <div className="flex mb-6">
           <button
-            className={`flex-1 py-2 text-center font-semibold ${
-              activeTab === 'ongoing'
-                ? 'text-red-800 border-b-2 border-red-800'
-                : 'text-gray-500'
-            }`}
+            className={`flex-1 py-2 text-center font-semibold ${activeTab === 'ongoing'
+              ? 'text-red-800 border-b-2 border-red-800'
+              : 'text-gray-500'
+              }`}
             onClick={() => setActiveTab('ongoing')}
           >
             Ongoing
           </button>
           <button
-            className={`flex-1 py-2 text-center font-semibold ${
-              activeTab === 'history'
-                ? 'text-red-800 border-b-2 border-red-800'
-                : 'text-gray-500'
-            }`}
+            className={`flex-1 py-2 text-center font-semibold ${activeTab === 'history'
+              ? 'text-red-800 border-b-2 border-red-800'
+              : 'text-gray-500'
+              }`}
             onClick={() => setActiveTab('history')}
           >
             History
